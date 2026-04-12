@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ứng dụng theo dõi tập gym cho hội viên - Tracking tạ, bài tập, volume, set, rep">
+    <title>Fitness Tracker - Theo dõi tập gym</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- ===== TOP NAVIGATION ===== -->
+    <nav class="top-nav" id="top-nav">
+        <div class="nav-inner">
+            <div class="nav-brand">
+                <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+                    <rect x="2" y="14" width="32" height="8" rx="4" fill="url(#ng1)"/>
+                    <rect x="6" y="8" width="6" height="20" rx="3" fill="url(#ng2)"/>
+                    <rect x="24" y="8" width="6" height="20" rx="3" fill="url(#ng2)"/>
+                    <rect x="0" y="11" width="4" height="14" rx="2" fill="url(#ng3)"/>
+                    <rect x="32" y="11" width="4" height="14" rx="2" fill="url(#ng3)"/>
+                    <defs>
+                        <linearGradient id="ng1" x1="2" y1="14" x2="34" y2="22"><stop stop-color="#6C63FF"/><stop offset="1" stop-color="#E040FB"/></linearGradient>
+                        <linearGradient id="ng2" x1="6" y1="8" x2="12" y2="28"><stop stop-color="#6C63FF"/><stop offset="1" stop-color="#00BCD4"/></linearGradient>
+                        <linearGradient id="ng3" x1="0" y1="11" x2="4" y2="25"><stop stop-color="#E040FB"/><stop offset="1" stop-color="#FF5252"/></linearGradient>
+                    </defs>
+                </svg>
+                <span>Fitness Tracker</span>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-page="dashboard" id="nav-dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Tổng hợp</span>
+                </button>
+                <button class="nav-tab" data-page="exercises" id="nav-exercises">
+                    <span class="nav-icon">🏋️</span>
+                    <span class="nav-label">Bài tập</span>
+                </button>
+                <button class="nav-tab" data-page="log" id="nav-log">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-label">Ghi nhận</span>
+                </button>
+            </div>
+            <button class="sync-btn" id="btn-sync" title="Đồng bộ dữ liệu">🔄</button>
+            <span class="sync-status" id="sync-status"></span>
+            <div class="nav-date" id="nav-date"></div>
+        </div>
+    </nav>
+
+    <main class="main-content" id="main-content">
+
+        <!-- ========================================= -->
+        <!-- PAGE 1: TỔNG HỢP / DASHBOARD             -->
+        <!-- ========================================= -->
+        <section class="page active" id="page-dashboard">
+            <div class="card attendance-card">
+                <div class="card-header">
+                    <h2><span class="emoji">📅</span> Lịch tập tuần này</h2>
+                    <div class="week-nav">
+                        <button class="week-btn" id="prev-week">‹</button>
+                        <span class="week-label" id="week-label"></span>
+                        <button class="week-btn" id="next-week">›</button>
+                    </div>
+                </div>
+                <div class="attendance-grid" id="attendance-grid"></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h2><span class="emoji">👤</span> Thống kê cá nhân</h2></div>
+                <div class="member-pills" id="member-pills">
+                    <button class="member-pill active" data-member="Quốc"><span class="pill-dot" style="--dot:#6C63FF"></span>Quốc</button>
+                    <button class="member-pill" data-member="Hiếu"><span class="pill-dot" style="--dot:#E040FB"></span>Hiếu</button>
+                    <button class="member-pill" data-member="Bảo"><span class="pill-dot" style="--dot:#00BCD4"></span>Bảo</button>
+                    <button class="member-pill" data-member="An"><span class="pill-dot" style="--dot:#FF9800"></span>An</button>
+                    <button class="member-pill" data-member="Madnes"><span class="pill-dot" style="--dot:#FF5252"></span>Madnes</button>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-card"><div class="stat-icon-box" style="--sc:#6C63FF">📅</div><div class="stat-detail"><span class="stat-val" id="d-total-sessions">0</span><span class="stat-lbl">Buổi tập</span></div></div>
+                <div class="stat-card"><div class="stat-icon-box" style="--sc:#E040FB">⚡</div><div class="stat-detail"><span class="stat-val" id="d-total-volume">0</span><span class="stat-lbl">Tổng Volume (kg)</span></div></div>
+                <div class="stat-card"><div class="stat-icon-box" style="--sc:#00BCD4">📊</div><div class="stat-detail"><span class="stat-val" id="d-total-sets">0</span><span class="stat-lbl">Tổng Sets</span></div></div>
+                <div class="stat-card"><div class="stat-icon-box" style="--sc:#FF5252">🏆</div><div class="stat-detail"><span class="stat-val" id="d-max-weight">0</span><span class="stat-lbl">Tạ nặng nhất (kg)</span></div></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="emoji">📈</span> Biểu đồ tiến trình</h2>
+                    <select id="chart-filter" class="select-sm">
+                        <option value="all">Tất cả</option>
+                        <option value="1">Ngực - Vai - Tay sau</option>
+                        <option value="2">Lưng - Tay trước - Cẳng</option>
+                        <option value="3">Chân - Bụng</option>
+                    </select>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-box"><h4>Volume (kg)</h4><div class="chart-wrap"><canvas id="chart-volume"></canvas></div></div>
+                    <div class="chart-box"><h4>Tạ nặng nhất (kg)</h4><div class="chart-wrap"><canvas id="chart-weight"></canvas></div></div>
+                    <div class="chart-box"><h4>Tổng Sets</h4><div class="chart-wrap"><canvas id="chart-sets"></canvas></div></div>
+                    <div class="chart-box"><h4>Tổng Reps</h4><div class="chart-wrap"><canvas id="chart-reps"></canvas></div></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="emoji">📋</span> Lịch sử gần đây <span class="badge" id="d-member-badge">Quốc</span></h2>
+                    <button class="btn-outline" id="btn-export-csv">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"/></svg>
+                        Xuất CSV
+                    </button>
+                </div>
+                <div class="table-scroll">
+                    <table class="data-table" id="dashboard-table">
+                        <thead><tr><th>Ngày</th><th>Loại bài</th><th>Bài tập</th><th>Sets</th><th>Reps</th><th>Tạ (kg)</th><th>Volume</th></tr></thead>
+                        <tbody id="dashboard-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="dashboard-empty"><div class="empty-icon">📭</div><p>Chưa có dữ liệu</p><span>Hãy sang tab "Ghi nhận" để thêm buổi tập!</span></div>
+            </div>
+        </section>
+
+        <!-- ========================================= -->
+        <!-- PAGE 2: BÀI TẬP / EXERCISE LIBRARY       -->
+        <!-- ========================================= -->
+        <section class="page" id="page-exercises">
+            <!-- Muscle Group Filters -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="emoji">🔍</span> Tìm kiếm theo nhóm cơ</h2>
+                </div>
+                <div class="muscle-filters" id="muscle-filters">
+                    <button class="muscle-btn active" data-group="all">Tất cả</button>
+                    <button class="muscle-btn" data-group="chest" style="--mb-color:#E040FB">Ngực</button>
+                    <button class="muscle-btn" data-group="shoulder" style="--mb-color:#FF9800">Vai</button>
+                    <button class="muscle-btn" data-group="tricep" style="--mb-color:#FF5252">Tay sau</button>
+                    <button class="muscle-btn" data-group="back" style="--mb-color:#00BCD4">Lưng</button>
+                    <button class="muscle-btn" data-group="bicep" style="--mb-color:#4CAF50">Tay trước</button>
+                    <button class="muscle-btn" data-group="forearm" style="--mb-color:#9C27B0">Cẳng</button>
+                    <button class="muscle-btn" data-group="legs" style="--mb-color:#2196F3">Chân</button>
+                    <button class="muscle-btn" data-group="abs" style="--mb-color:#FFC107">Bụng</button>
+                </div>
+            </div>
+
+            <!-- Exercise Grid -->
+            <div class="exercise-grid" id="exercise-grid"></div>
+
+            <!-- Floating Selection Bar -->
+            <div class="selection-bar" id="selection-bar">
+                <div class="selection-left">
+                    <div class="selection-count-box">
+                        <span class="selection-count" id="selection-count">0</span>
+                    </div>
+                    <div class="selection-info">
+                        <strong>bài đã chọn</strong>
+                        <div class="selection-names" id="selection-names"></div>
+                    </div>
+                </div>
+                <div class="selection-actions">
+                    <button class="btn-ghost-sm" id="btn-clear-selection">✕ Xóa hết</button>
+                    <button class="btn-confirm" id="btn-confirm-selection">Xác nhận & Tiếp tục →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================= -->
+        <!-- PAGE 3: GHI NHẬN / WORKOUT LOG            -->
+        <!-- ========================================= -->
+        <section class="page" id="page-log">
+            <!-- Member selector -->
+            <div class="card">
+                <div class="card-header"><h2><span class="emoji">📝</span> Ghi nhận buổi tập</h2></div>
+                <div class="log-member-select">
+                    <label>Hội viên:</label>
+                    <div class="member-pills" id="log-member-pills">
+                        <button class="member-pill active" data-member="Quốc"><span class="pill-dot" style="--dot:#6C63FF"></span>Quốc</button>
+                        <button class="member-pill" data-member="Hiếu"><span class="pill-dot" style="--dot:#E040FB"></span>Hiếu</button>
+                        <button class="member-pill" data-member="Bảo"><span class="pill-dot" style="--dot:#00BCD4"></span>Bảo</button>
+                        <button class="member-pill" data-member="An"><span class="pill-dot" style="--dot:#FF9800"></span>An</button>
+                        <button class="member-pill" data-member="Madnes"><span class="pill-dot" style="--dot:#FF5252"></span>Madnes</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workout Progress & Muscle Distribution -->
+            <div class="card" id="progress-card">
+                <div class="card-header"><h2><span class="emoji">📊</span> Tiến độ buổi tập hôm nay</h2></div>
+
+                <!-- Overall completion -->
+                <div class="completion-section" id="completion-section">
+                    <div class="completion-header">
+                        <span class="completion-text" id="completion-text">0 / 0 bài tập</span>
+                        <span class="completion-pct" id="completion-pct">0%</span>
+                    </div>
+                    <div class="completion-track">
+                        <div class="completion-fill" id="completion-fill" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <!-- Muscle group distribution -->
+                <div class="muscle-dist-section" id="muscle-dist-section">
+                    <h3 class="dist-title">Phân bổ nhóm cơ</h3>
+                    <div id="muscle-dist-bars"></div>
+                </div>
+
+                <!-- No exercises selected state -->
+                <div class="no-exercises-msg" id="no-exercises-msg">
+                    <div class="empty-icon">🏋️</div>
+                    <p>Chưa chọn bài tập</p>
+                    <span>Hãy sang trang "Bài tập" để chọn bài trước!</span>
+                    <button class="btn-primary" id="btn-goto-exercises" style="margin-top:12px;">
+                        🏋️ Chọn bài tập
+                    </button>
+                </div>
+            </div>
+
+            <!-- Exercise Form -->
+            <div class="card log-form-wrapper" id="log-form-wrapper">
+                <div class="card-header">
+                    <h2><span class="emoji">🏋️</span> Bài tập</h2>
+                    <button class="btn-outline" id="btn-add-more-exercises">
+                        + Thêm bài từ trang Bài tập
+                    </button>
+                </div>
+                <form id="workout-form">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="input-date">Ngày tập</label>
+                            <input type="date" id="input-date" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="input-exercise">Bài tập</label>
+                            <select id="input-exercise" class="form-select" required>
+                                <option value="">— Chọn bài tập —</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="input-sets">Số Set</label>
+                            <input type="number" id="input-sets" min="1" max="20" placeholder="VD: 4" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="input-reps">Reps / Set</label>
+                            <input type="number" id="input-reps" min="1" max="100" placeholder="VD: 12" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="input-weight">Tạ (kg)</label>
+                            <input type="number" id="input-weight" min="0" max="500" step="0.5" placeholder="VD: 40" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="input-notes">Ghi chú</label>
+                            <input type="text" id="input-notes" placeholder="Tuỳ chọn">
+                        </div>
+                    </div>
+
+                    <!-- Volume Summary -->
+                    <div class="volume-summary" id="volume-summary">
+                        <div class="volume-total">
+                            <span>Volume bài này:</span>
+                            <strong id="volume-calc">0</strong> kg
+                        </div>
+                        <div class="volume-divider"></div>
+                        <div class="volume-today-section">
+                            <div class="volume-today-header">
+                                <span>Tổng Volume hôm nay:</span>
+                                <strong id="volume-today-total">0</strong> kg
+                            </div>
+                            <div class="volume-muscles" id="volume-muscles"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn-primary" id="btn-submit-log">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+                            Lưu bài tập
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- History -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="emoji">📋</span> Lịch sử <span class="badge" id="log-member-badge">Quốc</span></h2>
+                    <select id="log-history-filter" class="select-sm">
+                        <option value="all">Tất cả</option>
+                        <option value="1">Bài 1</option>
+                        <option value="2">Bài 2</option>
+                        <option value="3">Bài 3</option>
+                    </select>
+                </div>
+                <div class="table-scroll">
+                    <table class="data-table" id="log-table">
+                        <thead><tr><th>Ngày</th><th>Loại</th><th>Bài tập</th><th>Sets</th><th>Reps</th><th>Tạ</th><th>Volume</th><th>Ghi chú</th><th></th></tr></thead>
+                        <tbody id="log-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="log-empty"><div class="empty-icon">📭</div><p>Chưa có dữ liệu</p><span>Hãy thêm bài tập đầu tiên!</span></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Confirm Dialog -->
+    <div class="dialog-overlay" id="dialog-overlay" style="display:none;">
+        <div class="dialog-box">
+            <h3 id="dialog-title">Xác nhận</h3>
+            <p id="dialog-message">Bạn có chắc muốn xóa?</p>
+            <div class="dialog-btns">
+                <button class="btn-ghost" id="dialog-cancel">Hủy</button>
+                <button class="btn-danger" id="dialog-confirm">Xóa</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=4"></script>
+</body>
+</html>
