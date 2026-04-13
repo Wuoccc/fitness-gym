@@ -678,3 +678,169 @@ input[type=number]::-webkit-outer-spin-button {
   margin: 0;
 }
 input[type=number] { -moz-appearance: textfield; }
+
+/* ===================== MOBILE OPTIMIZATION (Android + iOS) ===================== */
+
+/* Global touch improvements */
+* { -webkit-tap-highlight-color: transparent; }
+button, [role="button"] { touch-action: manipulation; }
+a { touch-action: manipulation; }
+
+/* Prevent iOS input zoom — all inputs must be >= 16px font */
+input, select, textarea {
+  font-size: 16px !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.tbl-input { font-size: 16px !important; }
+
+/* iOS safe area (notch, home bar) */
+.top-nav {
+  padding-top: env(safe-area-inset-top);
+  height: calc(var(--nav-h) + env(safe-area-inset-top));
+}
+.main-content {
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+.modal-box {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+/* ===== MOBILE BREAKPOINT (max 640px) ===== */
+@media (max-width: 640px) {
+  /* Nav */
+  :root { --nav-h: 56px; }
+  .nav-inner { padding: 0 10px; gap: 6px; }
+  .nav-brand { font-size: 1rem; }
+  .nav-brand span { display: none; }
+  .nav-tabs { gap: 2px; }
+  .nav-tab { padding: 7px 12px; font-size: 0.75rem; gap: 4px; }
+  .nav-label { display: none; }
+  .nav-date { display: none; }
+  .nav-icon { font-size: 1rem; }
+
+  /* Cards */
+  .card { padding: 14px; border-radius: 12px; }
+  .card-header { margin-bottom: 12px; gap: 8px; }
+  .card-header h2 { font-size: 1rem; }
+
+  /* Member pills — scroll horizontally */
+  .member-pills { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .member-pill { padding: 8px 14px; font-size: 0.8rem; flex-shrink: 0; min-height: 40px; }
+
+  /* Attendance table */
+  .attendance-grid { min-width: 540px; }
+  .att-cell { padding: 9px 4px; font-size: 0.72rem; }
+
+  /* Stats */
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { padding: 14px 12px; }
+  .stat-value { font-size: 1.4rem; }
+
+  /* Log workout table - compact for mobile */
+  .log-table-wrap { border-radius: 8px; }
+  .log-workout-table th { padding: 10px 8px; font-size: 0.68rem; }
+  .log-workout-table td { padding: 9px 8px; }
+  .col-num { width: 28px; }
+  .col-input { width: 64px; }
+  .col-action { width: 80px; }
+  .tbl-input { padding: 6px 4px; border-radius: 6px; }
+  .btn-gen-sets-sm { padding: 6px 8px; font-size: 0.75rem; }
+  .ex-tbl-name { font-size: 0.85rem; }
+  .ex-tbl-muscle { display: none; }
+
+  /* Set rows - make tick button bigger for touch */
+  .btn-tick-set { width: 44px; height: 44px; border-radius: 10px; font-size: 1.2rem; }
+  .set-num-badge { width: 24px; height: 24px; }
+  .set-label-td { font-size: 0.8rem; }
+
+  /* Save button */
+  .btn-save-row-ex { padding: 12px 14px; font-size: 0.85rem; min-height: 48px; }
+
+  /* History list */
+  .history-item { padding: 12px 10px; }
+  .history-ex-name { font-size: 0.88rem; }
+  .history-meta { font-size: 0.72rem; }
+  .history-arrow { display: none; }
+
+  /* Modal - full-screen bottom sheet */
+  .modal-overlay { align-items: flex-end; }
+  .modal-box {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    padding: 20px 16px;
+  }
+  .modal-header h2 { font-size: 1.1rem; }
+  .modal-summary { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .modal-stat { padding: 10px 12px; }
+  .modal-stat strong { font-size: 0.95rem; }
+  .modal-set-row { grid-template-columns: 50px 1fr 1fr 60px; padding: 9px 10px; font-size: 0.85rem; }
+
+  /* Dashboard table */
+  .data-table { font-size: 0.78rem; }
+  .data-table th, .data-table td { padding: 10px 8px; }
+
+  /* Completion section */
+  .completion-header { flex-wrap: wrap; gap: 4px; }
+  .muscle-dist-row { gap: 6px; }
+  .muscle-dist-label { font-size: 0.75rem; min-width: 50px; }
+
+  /* Volume chips */
+  .volume-muscle-chip { font-size: 0.75rem; padding: 4px 10px; }
+
+  /* Done row */
+  .log-done-row { padding: 10px 12px; font-size: 0.82rem; }
+
+  /* Exercise grid */
+  .exercise-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .exercise-card { border-radius: 12px; }
+
+  /* Muscle filter buttons */
+  .muscle-filters-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .muscle-filters { flex-wrap: nowrap; }
+  .muscle-btn { flex-shrink: 0; padding: 7px 14px; font-size: 0.78rem; min-height: 38px; }
+
+  /* Selection bar */
+  .selection-bar { padding: 12px 14px; border-radius: 14px 14px 0 0; }
+  .btn-confirm { padding: 10px 18px; font-size: 0.82rem; min-height: 44px; }
+
+  /* Header buttons */
+  .btn-outline, .btn-danger-sm { padding: 8px 12px; font-size: 0.75rem; min-height: 38px; }
+
+  /* Progress bar */
+  .completion-track { height: 6px; }
+  
+  /* Charts */
+  .charts-grid { grid-template-columns: 1fr; gap: 12px; }
+  .chart-card { padding: 14px; }
+}
+
+/* ===== TABLET (641px - 900px) ===== */
+@media (min-width: 641px) and (max-width: 900px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .charts-grid { grid-template-columns: 1fr 1fr; }
+  .modal-overlay { align-items: flex-end; }
+  .modal-box { border-radius: 20px 20px 0 0; max-height: 88vh; }
+}
+
+/* iOS momentum scrolling for scrollable areas */
+.table-scroll, .attendance-card, .activity-log-feed,
+.history-list, .exercise-grid, .member-pills {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix iOS button styling */
+button { -webkit-appearance: none; }
+
+/* Active states for touch (replaces hover on mobile) */
+@media (hover: none) {
+  .history-item:active { background: rgba(108,99,255,0.08); border-color: rgba(108,99,255,0.25); }
+  .log-ex-row:active { background: rgba(108,99,255,0.07); }
+  .member-pill:active { border-color: var(--accent); }
+  .btn-gen-sets-sm:active { background: var(--accent); color: white; }
+  .btn-save-row-ex:active { transform: scale(0.98); }
+  .btn-tick-set:active { transform: scale(0.92); }
+  .dash-hist-row:active .btn-del-dash { opacity: 1; }
+  .history-item:hover { transform: none; }
+}
