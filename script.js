@@ -5771,6 +5771,23 @@ const EXERCISES = {
     ],
     "3": [
         {
+            "id": "Bulgarian_Split_Squat",
+            "name": "Bulgarian Split Squat",
+            "vi": "Squat Bulgaria",
+            "icon": "🏋️",
+            "muscles": [
+                "Quadriceps",
+                "Glutes"
+            ],
+            "anim": "squat",
+            "equip": "Ghế + tạ",
+            "diff": "Khó",
+            "desc": "Một chân đặt lên ghế phía sau, chân trước squat xuống. Cô lập cơ đùi trước.",
+            "gradient": "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)",
+            "imgFolder": "Single_Leg_Squat",
+            "workoutType": 3
+        },
+        {
             "id": "3_4_Sit-Up",
             "name": "3/4 Sit-Up",
             "vi": "3/4 Sit-Up",
