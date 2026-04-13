@@ -8926,6 +8926,7 @@ function updateSyncClock() {
 function refreshCurrentPage() {
     if (state.currentPage === 'dashboard') refreshDashboard();
     else if (state.currentPage === 'log') refreshLog();
+    else if (state.currentPage === 'analysis') refreshAnalysis();
 }
 
 function showSyncStatus(msg) {
@@ -9091,6 +9092,7 @@ function navigateTo(page) {
     if (page==='dashboard') refreshDashboard();
     if (page==='exercises') renderExercises();
     if (page==='log') refreshLog();
+    if (page==='analysis') refreshAnalysis();
 }
 
 // ============================================================
@@ -9537,6 +9539,20 @@ window.saveSets = async function(btn) {
     btn.innerHTML = '✅ Đã lưu!';
     
     await addEntry(state.currentMember, entry);
+    // Auto-detect PR
+    setTimeout(() => {
+        const allEx = getMemberEntries(state.currentMember).filter(e => e.exercise === exName);
+        if (allEx.length >= 2) {
+            const prevEntries = allEx.slice(1);
+            const prevMaxW = Math.max(0, ...prevEntries.map(e => calcMaxW(e)));
+            const prevMaxVol = Math.max(0, ...prevEntries.map(e => calcVol(e)));
+            const newMaxW = calcMaxW(allEx[0]);
+            const newVol = calcVol(allEx[0]);
+            if (newMaxW > prevMaxW) showToast('\uD83C\uDFC6 K\u1ef7 l\u1ee5c m\u1edbi! ' + exName + ': ' + newMaxW + 'kg!', 'success');
+            else if (newVol > prevMaxVol) showToast('\uD83C\uDFC6 K\u1ef7 l\u1ee5c Volume m\u1edbi! ' + exName + '!', 'success');
+        }
+    }, 800);
+
     showToast(`Đã lưu "${exName}"!`);
     
     // Gather all rows belonging to this exercise and animate them out
@@ -9665,6 +9681,11 @@ document.getElementById('sub-muscle-filters').addEventListener('click', e => {
 
 
     document.getElementById('sort-difficulty').addEventListener('change', e => { state.difficultySort = e.target.value; renderExercises(); });
+
+    document.getElementById('progression-exercise-select').addEventListener('change', e => {
+        state.progressionExercise = e.target.value;
+        renderProgression();
+    });
 
     document.getElementById('exercise-grid').addEventListener('click', e => { if(e.target.closest('.btn-video')) return; const card=e.target.closest('.exercise-card'); if(card) toggleExerciseSelection(card.dataset.exId); });
 

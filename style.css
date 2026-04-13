@@ -855,3 +855,26 @@ button { -webkit-appearance: none; }
   }
 }
 \n.sub-muscle-btn { padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; background: rgba(255,255,255,0.05); color: var(--text-2); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s ease; }\n.sub-muscle-btn.active { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3); box-shadow: 0 0 10px rgba(255,255,255,0.1); }\n
+/* ======= PR BOARD & ANALYSIS ======= */
+.pr-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.pr-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px 16px; transition: transform 0.2s, box-shadow 0.2s; }
+.pr-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.pr-card.gold { border-color: rgba(255,215,0,0.5); box-shadow: 0 0 18px rgba(255,215,0,0.15); }
+.pr-exercise-name { font-size: 0.88rem; font-weight: 600; color: var(--text-1); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-stats { display: flex; gap: 8px; }
+.pr-stat { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px 10px; text-align: center; flex: 1; }
+.pr-stat-val { display: block; font-size: 1.05rem; font-weight: 700; color: #FFD700; }
+.pr-stat-lbl { font-size: 0.65rem; color: var(--text-3); margin-top: 2px; }
+.pr-date { font-size: 0.68rem; color: var(--text-3); margin-top: 8px; }
+
+.weak-points { padding: 8px 0; }
+.weak-point-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.weak-point-label { width: 80px; font-size: 0.78rem; color: var(--text-2); flex-shrink: 0; }
+.weak-point-bar-bg { flex: 1; height: 7px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+.weak-point-bar { height: 7px; border-radius: 4px; transition: width 0.6s ease; }
+.weak-point-pct { width: 36px; text-align: right; font-size: 0.75rem; color: var(--text-3); flex-shrink: 0; }
+.weak-point-warn { font-size: 0.62rem; color: #FF5252; flex-shrink: 0; }
+.weak-point-heading { font-size: 0.8rem; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin: 16px 0 10px; }
+.analysis-alert { margin-top: 16px; padding: 12px 14px; background: rgba(255,82,82,0.08); border-radius: 10px; border-left: 3px solid #FF5252; }
+.analysis-alert strong { color: #FF5252; font-size: 0.82rem; }
+.analysis-alert ul { margin: 8px 0 0; padding-left: 16px; color: var(--text-2); font-size: 0.78rem; line-height: 1.7; }

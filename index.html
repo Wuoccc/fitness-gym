@@ -53,6 +53,10 @@
                     <span class="nav-icon">📝</span>
                     <span class="nav-label">Ghi nhận</span>
                 </button>
+                <button class="nav-tab" data-page="analysis" id="nav-analysis">
+                    <span class="nav-icon">🏆</span>
+                    <span class="nav-label">Phân tích</span>
+                </button>
             </div>
             <button class="sync-btn" id="btn-sync" title="Đồng bộ dữ liệu">🔄</button>
             <span class="sync-status" id="sync-status"></span>
@@ -273,6 +277,52 @@
                 <div class="history-list" id="history-list"></div>
                 <div class="empty-state" id="log-empty"><div class="empty-icon">📭</div><p>Chưa có dữ liệu</p><span>Hãy thêm bài tập đầu tiên!</span></div>
             </div>
+        </section>
+
+        <!-- ========================================= -->
+        <!-- PAGE 4: PHÂN TÍCH / ANALYSIS             -->
+        <!-- ========================================= -->
+        <section class="page" id="page-analysis">
+
+            <!-- PR Board -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="emoji">🏆</span> Kỷ lục cá nhân (PR) <span class="badge" id="pr-member-badge">Quốc</span></h2>
+                </div>
+                <div id="pr-stats-row" class="stats-row" style="margin-bottom:16px;"></div>
+                <div id="pr-board" class="pr-board">
+                    <div class="empty-state show"><div class="empty-icon">🏆</div><p>Chưa có dữ liệu PR</p><span>Hãy ghi nhận buổi tập đầu tiên!</span></div>
+                </div>
+            </div>
+
+            <!-- Progression Tracking -->
+            <div class="card">
+                <div class="card-header" style="flex-wrap:wrap; gap:8px;">
+                    <h2><span class="emoji">📈</span> Progression Tracking</h2>
+                    <select id="progression-exercise-select" class="select-sm" style="min-width:160px;">
+                        <option value="">Chọn bài tập...</option>
+                    </select>
+                </div>
+                <div id="progression-chart-wrap" style="display:none;">
+                    <div class="chart-wrap" style="height:240px;"><canvas id="chart-progression"></canvas></div>
+                    <div id="progression-stats" class="pr-stats" style="margin-top:16px; gap:8px;"></div>
+                </div>
+                <div id="progression-empty" class="empty-state show">
+                    <div class="empty-icon">📊</div>
+                    <p>Chọn một bài tập để xem tiến trình</p>
+                    <span>Biểu đồ sẽ hiển thị tạ max và volume theo thời gian</span>
+                </div>
+            </div>
+
+            <!-- Weak Point Analysis -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="emoji">🎯</span> Phân tích điểm yếu</h2>
+                </div>
+                <div class="chart-wrap" style="height:300px;"><canvas id="chart-muscle-radar"></canvas></div>
+                <div id="weak-points-container" class="weak-points"></div>
+            </div>
+
         </section>
 
     </main>
