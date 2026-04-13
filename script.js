@@ -8769,7 +8769,7 @@ const MUSCLE_FILTERS = {
     chest:    { label:'Ngực',      keywords:['Ngực', 'Chest'],                  color:'#E040FB' },
     shoulder: { label:'Vai',       keywords:['Vai', 'Shoulders'],                   color:'#FF9800' },
     tricep:   { label:'Tay sau',   keywords:['Tay sau', 'Triceps'],               color:'#FF5252' },
-    back:     { label:'Lưng',      keywords:['Lưng', 'Lats', 'Middle back', 'Lower back'],                  color:'#00BCD4' },
+    back:     { label:'Lưng',      keywords:['Lưng', 'Lats', 'Middle back', 'Lower back', 'Traps'],                  color:'#00BCD4' },
     bicep:    { label:'Tay trước', keywords:['Tay trước', 'Biceps'],             color:'#4CAF50' },
     forearm:  { label:'Cẳng',      keywords:['Cẳng', 'Forearms'],                  color:'#9C27B0' },
     legs:     { label:'Chân',      keywords:['Đùi','Bắp chân','Mông','Đùi trong','Đùi ngoài', 'Quadriceps', 'Hamstrings', 'Glutes', 'Calves', 'Abductors', 'Adductors'],color:'#2196F3' },
