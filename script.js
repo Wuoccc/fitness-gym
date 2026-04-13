@@ -549,6 +549,9 @@ function refreshLog() {
     document.getElementById('completion-section').style.display = hasSelection?'block':'none';
     document.getElementById('muscle-dist-section').style.display = hasSelection?'block':'none';
     document.getElementById('volume-summary-wrapper').style.display = hasSelection?'block':'none';
+    const badge = document.getElementById('log-member-badge');
+    if (badge) badge.textContent = state.currentMember;
+    
     if (hasSelection) { renderDynamicLogList(); updateProgress(); updateVolumeSummary(); }
     else { document.getElementById('dynamic-log-list').innerHTML=''; }
     renderLogHistory();
