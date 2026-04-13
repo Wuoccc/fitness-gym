@@ -9038,7 +9038,7 @@ function getWeekDates(offset=0) {
 function exerciseMatchesFilter(ex, group) {
     if (group==='all') return true;
     const f = MUSCLE_FILTERS[group];
-    return f && f.keywords && ex.muscles.some(m => f.keywords.some(kw => m.includes(kw)));
+    return f && f.keywords && ex.muscles.some(m => f.keywords.some(kw => m.toLowerCase().includes(kw.toLowerCase())));
 }
 function getPrimaryMuscleGroup(ex) {
     const pm = ex.muscles[0];
