@@ -253,12 +253,7 @@
                         <option value="3">Bài 3</option>
                     </select>
                 </div>
-                <div class="table-scroll">
-                    <table class="data-table" id="log-table">
-                        <thead><tr><th>Ngày</th><th>Loại</th><th>Bài tập</th><th>Sets</th><th>Reps</th><th>Tạ</th><th>Volume</th><th>Ghi chú</th><th></th></tr></thead>
-                        <tbody id="log-tbody"></tbody>
-                    </table>
-                </div>
+                <div class="history-list" id="history-list"></div>
                 <div class="empty-state" id="log-empty"><div class="empty-icon">📭</div><p>Chưa có dữ liệu</p><span>Hãy thêm bài tập đầu tiên!</span></div>
             </div>
         </section>
@@ -267,6 +262,21 @@
 
     <!-- Toast -->
     <div class="toast-container" id="toast-container"></div>
+
+    <!-- Entry Detail Modal -->
+    <div class="modal-overlay" id="entry-modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-box" id="entry-modal-box">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-ex-name">Bench Press</h2>
+                    <span id="modal-ex-date" style="color:var(--text-3); font-size:0.85rem;"></span>
+                </div>
+                <button class="modal-close" onclick="document.getElementById('entry-modal-overlay').style.display='none'">✕</button>
+            </div>
+            <div class="modal-summary" id="modal-summary"></div>
+            <div class="modal-sets" id="modal-sets"></div>
+        </div>
+    </div>
 
     <!-- Confirm Dialog -->
     <div class="dialog-overlay" id="dialog-overlay" style="display:none;">
@@ -280,6 +290,6 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?v=7"></script>
+    <script type="module" src="script.js?v=8"></script>
 </body>
 </html>

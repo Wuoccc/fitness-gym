@@ -708,12 +708,91 @@ window.saveSets = async function(btn) {
         notes: ''
     };
     
+    btn.disabled = true;
     btn.classList.add('saved');
     btn.textContent = 'Đã Lưu!';
     
     await addEntry(state.currentMember, entry);
     showToast(`Đã lưu "${exName}"!`);
-    refreshLog();
+    
+    // Animate and remove this card instead of full re-render
+    card.style.transition = 'all 0.4s ease';
+    card.style.transform = 'scale(0.95)';
+    card.style.opacity = '0';
+    setTimeout(() => {
+        card.remove();
+        updateProgress();
+        updateVolumeSummary();
+        renderLogHistory();
+    }, 400);
+};
+
+window.openEntryModal = function(entryId) {
+    const allEntries = getMemberEntries(state.currentMember);
+    const entry = allEntries.find(e => e.id === entryId);
+    if (!entry) return;
+    
+    document.getElementById('modal-ex-name').textContent = entry.exercise;
+    document.getElementById('modal-ex-date').textContent = fmtDate(entry.date);
+    
+    // Summary stats
+    const totalSets = calcSets(entry);
+    const totalVol = calcVol(entry);
+    const maxW = calcMaxW(entry);
+    const targetSets = entry.targetSets || totalSets;
+    const targetReps = entry.targetReps || 0;
+    
+    document.getElementById('modal-summary').innerHTML = `
+        <div class="modal-stat"><span>🎯 Mục tiêu</span><strong>${targetSets} set × ${targetReps} rep</strong></div>
+        <div class="modal-stat"><span>✅ Hoàn thành</span><strong>${totalSets} / ${targetSets} set</strong></div>
+        <div class="modal-stat"><span>💪 Tạ tối đa</span><strong>${maxW} kg</strong></div>
+        <div class="modal-stat"><span>⚡ Volume</span><strong>${fmtNum(Math.round(totalVol))} kg</strong></div>
+    `;
+    
+    // Per-set detail
+    if (entry.setsData && entry.setsData.length > 0) {
+        document.getElementById('modal-sets').innerHTML = `
+            <h4 style="color:var(--text-2); margin-bottom:12px; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.05em;">Chi tiết từng Set</h4>
+            ${entry.setsData.map(s => `
+                <div class="modal-set-row ${s.completed ? 'done' : 'skipped'}">
+                    <span class="modal-set-label">Set ${s.setNo}</span>
+                    <span>${s.reps} rep</span>
+                    <span>${s.weight > 0 ? s.weight + ' kg' : '—'}</span>
+                    <span class="modal-set-badge">${s.completed ? '✅ Đạt' : '❌ Bỏ'}</span>
+                </div>
+            `).join('')}
+        `;
+    } else {
+        // Old format: single entry
+        document.getElementById('modal-sets').innerHTML = `
+            <div class="modal-set-row done">
+                <span class="modal-set-label">Tổng cộng</span>
+                <span>${entry.reps || calcReps(entry)} rep</span>
+                <span>${entry.weight || maxW} kg</span>
+                <span class="modal-set-badge">✅ Đạt</span>
+            </div>
+        `;
+    }
+    
+    // Delete button inside modal
+    const existing = document.getElementById('modal-delete-btn');
+    if (existing) existing.remove();
+    const delBtn = document.createElement('button');
+    delBtn.id = 'modal-delete-btn';
+    delBtn.className = 'btn-danger';
+    delBtn.style.cssText = 'width:100%; margin-top:20px; padding:12px;';
+    delBtn.textContent = '🗑️ Xóa bài tập này';
+    delBtn.onclick = async () => {
+        if (await confirmDialog('Xác nhận xóa', 'Bạn có chắc muốn xóa bài này?')) {
+            await deleteEntry(state.currentMember, entryId);
+            document.getElementById('entry-modal-overlay').style.display = 'none';
+            showToast('Đã xóa!', 'info');
+            refreshLog();
+        }
+    };
+    document.getElementById('entry-modal-box').appendChild(delBtn);
+    
+    document.getElementById('entry-modal-overlay').style.display = 'flex';
 };
 
 function initEvents() {
