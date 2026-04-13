@@ -1,4 +1,4 @@
-/* =============================================
+ï»¿/* =============================================
    FITNESS TRACKER â€” Redesigned with Muscle Filters
    ============================================= */
 
@@ -686,7 +686,7 @@ input[type=number] { -moz-appearance: textfield; }
 button, [role="button"] { touch-action: manipulation; }
 a { touch-action: manipulation; }
 
-/* Prevent iOS input zoom — all inputs must be >= 16px font */
+/* Prevent iOS input zoom ï¿½ all inputs must be >= 16px font */
 input, select, textarea {
   font-size: 16px !important;
   -webkit-appearance: none;
@@ -725,7 +725,7 @@ input, select, textarea {
   .card-header { margin-bottom: 12px; gap: 8px; }
   .card-header h2 { font-size: 1rem; }
 
-  /* Member pills — scroll horizontally */
+  /* Member pills ï¿½ scroll horizontally */
   .member-pills { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
   .member-pill { padding: 8px 14px; font-size: 0.8rem; flex-shrink: 0; min-height: 40px; }
 
@@ -843,4 +843,14 @@ button { -webkit-appearance: none; }
   .btn-tick-set:active { transform: scale(0.92); }
   .dash-hist-row:active .btn-del-dash { opacity: 1; }
   .history-item:hover { transform: none; }
+}
+
+/* iOS Safe Area Fix â€” override main-content top padding to account for nav height increase */
+.main-content {
+  padding-top: calc(var(--nav-h) + env(safe-area-inset-top) + 24px) !important;
+}
+@media (max-width: 640px) {
+  .main-content {
+    padding-top: calc(var(--nav-h) + env(safe-area-inset-top) + 12px) !important;
+  }
 }
