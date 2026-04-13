@@ -665,12 +665,64 @@ function updateVolumeSummary() {
 }
 
 function renderLogHistory() {
-    const entries=getMemberEntries(state.currentMember); const filter=document.getElementById('log-history-filter').value;
-    let filtered=entries; if (filter!=='all') filtered=entries.filter(e=>String(e.workoutType)===filter);
-    const tbody=document.getElementById('log-tbody'), empty=document.getElementById('log-empty'), table=document.getElementById('log-table');
-    if (!filtered.length) { table.style.display='none'; empty.classList.add('show'); return; }
-    table.style.display='table'; empty.classList.remove('show');
-    tbody.innerHTML = filtered.map(e => { const vol=e.sets*e.reps*e.weight, wt=WORKOUT_TYPES[e.workoutType]; return `<tr><td>${fmtDate(e.date)}</td><td><span class="type-badge t${e.workoutType}">${wt?wt.short:'?'}</span></td><td>${e.exercise}</td><td>${e.sets}</td><td>${e.reps}</td><td>${e.weight}</td><td><strong>${fmtNum(vol)}</strong></td><td>${e.notes||'—'}</td><td><button class="btn-del" data-id="${e.id}">🗑️</button></td></tr>`; }).join('');
+    const entries = getMemberEntries(state.currentMember);
+    const filter = document.getElementById('log-history-filter').value;
+    let filtered = entries;
+    if (filter !== 'all') filtered = entries.filter(e => String(e.workoutType) === filter);
+    
+    const list = document.getElementById('history-list');
+    const empty = document.getElementById('log-empty');
+    
+    if (!list) return;
+    
+    if (!filtered.length) {
+        list.innerHTML = '';
+        if (empty) empty.classList.add('show');
+        return;
+    }
+    if (empty) empty.classList.remove('show');
+    
+    // Group by date
+    const byDate = {};
+    filtered.forEach(e => {
+        if (!byDate[e.date]) byDate[e.date] = [];
+        byDate[e.date].push(e);
+    });
+    
+    const sortedDates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+    
+    list.innerHTML = sortedDates.map(date => {
+        const dayItems = byDate[date];
+        const totalVol = dayItems.reduce((s, e) => s + calcVol(e), 0);
+        const itemsHtml = dayItems.map(e => {
+            const vol = calcVol(e);
+            const sets = calcSets(e);
+            const maxW = calcMaxW(e);
+            const wt = WORKOUT_TYPES[e.workoutType];
+            const completion = e.setsData
+                ? `${e.setsData.filter(s => s.completed).length}/${e.setsData.length} set`
+                : `${sets} set`;
+            return `
+            <div class="history-item" onclick="window.openEntryModal('${e.id}')">
+                <div class="history-item-left">
+                    <span class="history-ex-name">${e.exercise}</span>
+                    <span class="history-meta">${completion} &middot; max ${maxW}kg &middot; ${fmtNum(Math.round(vol))} kg</span>
+                </div>
+                <div class="history-item-right">
+                    <span class="type-badge t${e.workoutType}">${wt ? wt.short : '?'}</span>
+                    <span class="history-arrow">&rsaquo;</span>
+                </div>
+            </div>`;
+        }).join('');
+        return `
+        <div class="history-date-group">
+            <div class="history-date-header">
+                <span>${fmtDate(date)}</span>
+                <span class="history-date-vol">${fmtNum(Math.round(totalVol))} kg</span>
+            </div>
+            ${itemsHtml}
+        </div>`;
+    }).join('');
 }
 
 function exportCSV() {
@@ -877,10 +929,9 @@ function initEvents() {
     const addMoreBtn = document.getElementById('btn-add-more-exercises');
     if (addMoreBtn) addMoreBtn.addEventListener('click', () => navigateTo('exercises'));
 
-    // Delete from history-list via event delegation
-    document.getElementById('history-list').addEventListener('click', async e => {
-        // handled by openEntryModal now
-    });
+    // History list events handled by openEntryModal inline
+    const histList = document.getElementById('history-list');
+    if (histList) histList.addEventListener('click', () => {});
 
     document.getElementById('log-history-filter').addEventListener('change', renderLogHistory);
     document.getElementById('chart-filter').addEventListener('change', updateDashboardCharts);
