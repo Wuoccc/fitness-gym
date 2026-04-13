@@ -154,12 +154,15 @@
             <!-- Muscle Group Filters -->
             <div class="card">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <h2><span class="emoji">🔍</span> Tìm kiếm theo nhóm cơ</h2>
-                    <select id="sort-difficulty" class="select-sm">
-                        <option value="default">Sắp xếp: Mặc định</option>
-                        <option value="asc">Sắp xếp: Dễ → Khó</option>
-                        <option value="desc">Sắp xếp: Khó → Dễ</option>
-                    </select>
+                    <h2><span class="emoji">🔍</span> Lọc bài tập</h2>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="exercise-search" placeholder="Tên bài tập..." style="padding: 7px 12px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 0.85rem; width: 150px; outline: none; transition: 0.2s;" onfocus="this.style.borderColor='var(--accent)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';">
+                        <select id="sort-difficulty" class="select-sm">
+                            <option value="default">Sắp xếp: Mặc định</option>
+                            <option value="asc">Sắp xếp: Dễ → Khó</option>
+                            <option value="desc">Sắp xếp: Khó → Dễ</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="muscle-filters" id="muscle-filters">
                     <button class="muscle-btn active" data-group="all">Tất cả</button>
