@@ -1,16 +1,34 @@
 /* =============================================
-   FITNESS TRACKER — Full App Logic v3
-   + Exercise Images from free-exercise-db
-   + Google Sheets Cloud Sync
+   FITNESS TRACKER — Full App Logic v6
+   + Firebase Cloud Firestore (REALTIME SYNC)
    ============================================= */
 
+// IMPORT FIREBASE MODULES
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
 // ============================================================
-// GOOGLE SHEETS CONFIG — Đặt URL của bạn ở đây
+// FIREBASE CONFIGURATION
 // ============================================================
-// Sau khi deploy Google Apps Script, dán URL vào đây:
-const GOOGLE_SCRIPT_URL = ''; // <-- DÁN URL CỦA BẠN VÀO ĐÂY
+// ⚠️ COPY VÀ DÁN ĐOẠN FIREBASE_CONFIG CỦA BẠN VÀO ĐÂY:
+const firebaseConfig = {
+  apiKey: "AIzaSyCmvWnJBRVPkZDH7ya7YnGmIA4yJepgog0",
+  authDomain: "fitness-gym2026.firebaseapp.com",
+  projectId: "fitness-gym2026",
+  storageBucket: "fitness-gym2026.firebasestorage.app",
+  messagingSenderId: "320726829445",
+  appId: "1:320726829445:web:320573c5c04aaff9fb1cec",
+  measurementId: "G-GE007JH64D"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const WORKOUTS_COL = collection(db, 'workouts');
+const LOGS_COL = collection(db, 'logs');
 
 // Image base URL from free-exercise-db
+
 const IMG_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises';
 
 // ============================================================
@@ -101,6 +119,7 @@ let state = {
     weekOffset: 0,
     charts: {},
     cloudData: null,       // cached cloud data
+    cloudLogs: [],         // cached cloud logs
     isOnline: false,       // true if Google Sheets is configured
     syncing: false,
     syncInterval: null,    // auto-sync polling interval
@@ -114,6 +133,7 @@ const AUTO_SYNC_INTERVAL = 30000;
 // DATA LAYER — Hybrid: Cloud first, localStorage fallback
 // ============================================================
 const STORAGE_KEY = 'fitness_tracker_data';
+const LOGS_STORAGE_KEY = 'fitness_tracker_logs';
 
 function loadDataLocal() {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -122,99 +142,80 @@ function loadDataLocal() {
 }
 function saveDataLocal(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
-// Cloud operations
-async function cloudRead(silent = false) {
-    if (!GOOGLE_SCRIPT_URL) return null;
-    if (state.syncing) return state.cloudData; // prevent concurrent syncs
-    state.syncing = true;
-    try {
-        if (!silent) showSyncStatus('🔄 Đang đồng bộ...');
-        const res = await fetch(GOOGLE_SCRIPT_URL + '?action=read');
-        const json = await res.json();
-        const newData = json.data || {};
+function loadLogsLocal() {
+    const raw = localStorage.getItem(LOGS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+}
+function saveLogsLocal(logs) { localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(logs)); }
 
-        // Compare with existing data to detect changes
-        const oldJson = JSON.stringify(state.cloudData);
-        const newJson = JSON.stringify(newData);
-        const hasChanges = oldJson !== newJson;
+// ============================================================
+// FIREBASE CLOUD OPERATIONS & SYNC
+// ============================================================
+function isFirebaseConfigured() {
+    return firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY_HERE";
+}
+
+function initFirebaseSync() {
+    showSyncStatus('🔄 Đang kích hoạt Live Sync...');
+    
+    // Lắng nghe dữ liệu tập luyện (Workouts)
+    const qWorkouts = query(WORKOUTS_COL, orderBy('timestamp', 'desc'));
+    onSnapshot(qWorkouts, (snapshot) => {
+        const newData = {};
+        MEMBERS.forEach(m => newData[m] = []); // Reset groups
+        
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            data.id = doc.id; // Gắn ID thật từ Firebase
+            
+            // Xử lý Timestamp Firebase sang Local
+            let ts = data.timestamp;
+            if (ts && typeof ts.toDate === 'function') ts = ts.toDate();
+            // date fallback support for local
+            
+            if (!newData[data.member]) newData[data.member] = [];
+            newData[data.member].push(data);
+        });
+        
+        // Sort
+        for(let m in newData) newData[m].sort((a,b) => new Date(b.date) - new Date(a.date));
 
         state.cloudData = newData;
-        // Also save to local as backup
-        saveDataLocal(state.cloudData);
-        state.isOnline = true;
-        state.lastSyncTime = new Date();
+        saveDataLocal(newData);
+        
+        // Sync Logs
+        const qLogs = query(LOGS_COL, orderBy('timestamp', 'desc'));
+        onSnapshot(qLogs, (logSnap) => {
+            const logs = [];
+            logSnap.forEach(d => {
+                const l = d.data();
+                l.timestamp = (l.timestamp && l.timestamp.toDate) ? l.timestamp.toDate().toISOString() : new Date().toISOString();
+                logs.push(l);
+            });
+            state.cloudLogs = logs;
+            saveLogsLocal(logs);
 
-        const timeStr = state.lastSyncTime.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        showSyncStatus(`✅ ${timeStr}`);
-
-        // If data changed and it's a background sync, refresh current view
-        if (hasChanges && silent) {
-            console.log('[Sync] Data changed, refreshing view...');
+            state.isOnline = true;
+            const t = new Date();
+            showSyncStatus(`⚡ Live (${t.getHours()}:${t.getMinutes().toString().padStart(2,'0')})`);
             refreshCurrentPage();
-        }
-
-        return state.cloudData;
-    } catch (err) {
-        console.warn('Cloud read failed:', err);
+        });
+    }, (error) => {
+        console.warn('Lỗi Firestore:', error);
+        showSyncStatus('⚠️ Lỗi Kết Nối');
         state.isOnline = false;
-        showSyncStatus('⚠️ Offline');
-        return null;
-    } finally {
-        state.syncing = false;
-    }
-}
-
-async function cloudAdd(member, entry) {
-    if (!GOOGLE_SCRIPT_URL) return;
-    try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action:'add', member, entry })
-        });
-    } catch (err) { console.warn('Cloud add failed:', err); }
-}
-
-async function cloudDelete(member, id) {
-    if (!GOOGLE_SCRIPT_URL) return;
-    try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action:'delete', member, id })
-        });
-    } catch (err) { console.warn('Cloud delete failed:', err); }
-}
-
-function showSyncStatus(msg) {
-    const el = document.getElementById('sync-status');
-    if (el) el.textContent = msg;
+    });
 }
 
 // Refresh whatever page the user is currently viewing
 function refreshCurrentPage() {
     if (state.currentPage === 'dashboard') refreshDashboard();
     else if (state.currentPage === 'log') refreshLog();
-    // exercises page doesn't need data refresh (it shows exercise catalog, not user data)
 }
 
-// Start auto-sync polling
-function startAutoSync() {
-    if (!GOOGLE_SCRIPT_URL) return;
-    if (state.syncInterval) clearInterval(state.syncInterval);
-    state.syncInterval = setInterval(() => {
-        cloudRead(true); // silent = true for background sync
-    }, AUTO_SYNC_INTERVAL);
-    console.log(`[Sync] Auto-sync started (every ${AUTO_SYNC_INTERVAL/1000}s)`);
-}
-
-// Manual sync button
-async function manualSync() {
-    showToast('Đang đồng bộ dữ liệu...','info');
-    await cloudRead(false);
-    refreshCurrentPage();
-    if (state.isOnline) showToast('✅ Đã đồng bộ thành công!','success');
-    else showToast('⚠️ Không thể kết nối!','error');
+function showSyncStatus(msg) {
+    const el = document.getElementById('sync-status');
+    if (el) el.textContent = msg;
 }
 
 function loadData() {
@@ -224,30 +225,72 @@ function loadData() {
 function getMemberEntries(member) { return loadData()[member] || []; }
 
 async function addEntry(member, entry) {
-    // Always save locally first
-    const data = loadDataLocal();
-    if (!data[member]) data[member] = [];
-    entry.id = Date.now().toString(36) + Math.random().toString(36).substr(2,5);
-    data[member].push(entry);
-    data[member].sort((a,b) => new Date(b.date)-new Date(a.date));
-    saveDataLocal(data);
-    if (state.cloudData) { state.cloudData = data; }
+    if (isFirebaseConfigured()) {
+        try {
+            entry.member = member;
+            entry.timestamp = serverTimestamp();
+            await addDoc(WORKOUTS_COL, entry);
+            
+            await addDoc(LOGS_COL, {
+                member: member,
+                action: 'Thêm mới',
+                details: `Thêm bài ${entry.exercise} (${entry.sets}x${entry.reps})`,
+                timestamp: serverTimestamp()
+            });
+        } catch(e) {
+            console.error('Firebase save error:', e);
+            showToast('Lỗi lưu Firebase! (Kiểm tra lại rule / config)', 'error');
+        }
+    } else {
+        // Fallback local localStorage
+        const data = loadDataLocal();
+        if (!data[member]) data[member] = [];
+        entry.id = Date.now().toString(36) + Math.random().toString(36).substr(2,5);
+        data[member].push(entry);
+        data[member].sort((a,b) => new Date(b.date)-new Date(a.date));
+        saveDataLocal(data);
+        if (state.cloudData) { state.cloudData = data; }
 
-    // Then sync to cloud
-    if (GOOGLE_SCRIPT_URL) {
-        cloudAdd(member, entry).then(() => cloudRead());
+        const logs = loadLogsLocal();
+        logs.unshift({ timestamp: new Date().toISOString(), member, action: 'Thêm mới', details: `Thêm bài ${entry.exercise}` });
+        saveLogsLocal(logs);
+        if (state.cloudData) state.cloudLogs = logs;
+        refreshCurrentPage();
     }
 }
 
 async function deleteEntry(member, id) {
-    const data = loadDataLocal();
-    if (!data[member]) return;
-    data[member] = data[member].filter(e => e.id !== id);
-    saveDataLocal(data);
-    if (state.cloudData) { state.cloudData = data; }
+    if (isFirebaseConfigured()) {
+        try {
+            let exName = 'Bài tập';
+            if (state.cloudData && state.cloudData[member]) {
+               const found = state.cloudData[member].find(x => x.id === id);
+               if (found) exName = found.exercise;
+            }
 
-    if (GOOGLE_SCRIPT_URL) {
-        cloudDelete(member, id).then(() => cloudRead());
+            await deleteDoc(doc(db, 'workouts', id));
+            await addDoc(LOGS_COL, {
+                member: member,
+                action: 'Xóa',
+                details: `Xóa bài ${exName}`,
+                timestamp: serverTimestamp()
+            });
+        } catch(e) { console.error('Firebase del error', e); showToast('Xóa thất bại', 'error'); }
+    } else {
+        const data = loadDataLocal();
+        if (!data[member]) return;
+        const entryToDel = data[member].find(e => e.id === id);
+        data[member] = data[member].filter(e => e.id !== id);
+        saveDataLocal(data);
+        if (state.cloudData) { state.cloudData = data; }
+
+        if (entryToDel) {
+            const logs = loadLogsLocal();
+            logs.unshift({ timestamp: new Date().toISOString(), member, action: 'Xóa', details: `Xóa bài ${entryToDel.exercise}` });
+            saveLogsLocal(logs);
+            if (state.cloudData) state.cloudLogs = logs;
+        }
+        refreshCurrentPage();
     }
 }
 
@@ -328,7 +371,40 @@ function navigateTo(page) {
 // ============================================================
 // PAGE 1: DASHBOARD
 // ============================================================
-function refreshDashboard() { renderAttendance(); updateDashboardStats(); updateDashboardCharts(); renderDashboardHistory(); }
+function refreshDashboard() { renderAttendance(); updateDashboardStats(); updateDashboardCharts(); renderDashboardHistory(); renderActivityLogs(); }
+
+function renderActivityLogs() {
+    const feed = document.getElementById('activity-log-feed');
+    if (!feed) return;
+    let logs = state.cloudLogs;
+    if (!logs || !logs.length) logs = loadLogsLocal();
+    if (!logs || !logs.length) {
+        feed.innerHTML = '<div class="empty-state show"><div class="empty-icon">📭</div><p>Chưa có hoạt động nào</p></div>';
+        return;
+    }
+    
+    // Take top 30 logs
+    feed.innerHTML = logs.slice(0, 30).map(log => {
+        const d = new Date(log.timestamp);
+        const timeStr = isNaN(d) ? log.timestamp : d.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit', day:'2-digit', month:'2-digit'});
+        
+        let initial = log.member ? log.member.charAt(0).toUpperCase() : '?';
+        let bg = MEMBER_COLORS[log.member] || '#6C63FF';
+        let actionClass = log.action === 'Xóa' ? 'log-del' : 'log-add';
+        
+        return `<div class="log-item ${actionClass}">
+            <div class="log-avatar" style="background:${bg}">${initial}</div>
+            <div class="log-content">
+                <header>
+                    <strong>${log.member}</strong>
+                    <span class="log-action">${log.action}</span>
+                    <span class="log-time">${timeStr}</span>
+                </header>
+                <div class="log-detail">${log.details}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
 
 function renderAttendance() {
     const dates = getWeekDates(state.weekOffset); const data = loadData(); const today = dateToStr(new Date());
@@ -619,20 +695,20 @@ async function init() {
     document.getElementById('nav-date').textContent = new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
     initEvents();
 
-    // Sync button event
+    // Thay thế nút Sync bằng Firebase
     const syncBtn = document.getElementById('btn-sync');
-    if (syncBtn) syncBtn.addEventListener('click', manualSync);
+    if (syncBtn) {
+        syncBtn.title = "Firebase Sync Active";
+        syncBtn.onclick = () => showToast('Dữ liệu đang được đồng bộ LIVE với Firebase!', 'info');
+    }
 
-    // Try cloud sync first
-    if (GOOGLE_SCRIPT_URL) {
-        showToast('Đang kết nối Google Sheets...','info');
-        await cloudRead();
-        if (state.isOnline) {
-            showToast('✅ Đã kết nối Google Sheets! (Auto-sync mỗi 30s)','success');
-            startAutoSync(); // Start auto-polling
-        }
+    // Kết nối Firebase
+    if (isFirebaseConfigured()) {
+        showToast('Đang kết nối Cloud Base...','info');
+        initFirebaseSync();
     } else {
-        showSyncStatus('📍 Local');
+        showSyncStatus('📍 Local Storage Only');
+        showToast('Mở script.js dán cấu hình Firebase để xài Online nhé!', 'error');
     }
 
     navigateTo('dashboard');
@@ -640,7 +716,7 @@ async function init() {
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
-    if (state.syncInterval) clearInterval(state.syncInterval);
+    // Unsubscribe from snapshot if needed
 });
 
 document.addEventListener('DOMContentLoaded', init);
