@@ -101,8 +101,8 @@ const MUSCLE_FILTERS = {
     abs:      { label:'Bụng',      keywords:['Bụng','Core'],           color:'#FFC107' }
 };
 
-const MEMBERS = ['Quốc','Hiếu','Bảo','An','Madnes'];
-const MEMBER_COLORS = { 'Quốc':'#6C63FF','Hiếu':'#E040FB','Bảo':'#00BCD4','An':'#FF9800','Madnes':'#FF5252' };
+const MEMBERS = ['Quốc','Hiếu','Bảo','An','Madsen'];
+const MEMBER_COLORS = { 'Quốc':'#6C63FF','Hiếu':'#E040FB','Bảo':'#00BCD4','An':'#FF9800','Madsen':'#FF5252' };
 const DAYS_VI = ['T2','T3','T4','T5','T6','T7','CN'];
 
 const ALL_EXERCISES = [];
