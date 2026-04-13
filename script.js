@@ -583,10 +583,10 @@ function renderDynamicLogList() {
             <div class="log-ex-setup">
                 <input type="number" class="setup-sets" placeholder="Số Set" min="1" max="20" required>
                 <input type="number" class="setup-reps" placeholder="Số Rep/Set" min="1" max="100" required>
-                <button class="btn-gen-sets">Tạo Set</button>
+                <button class="btn-gen-sets" type="button" onclick="window.genSets(this)">Tạo Set</button>
             </div>
             <div class="log-ex-sets-container"></div>
-            <button class="btn-save-ex">Lưu bài tập này</button>
+            <button class="btn-save-ex" type="button" onclick="window.saveSets(this)">Lưu bài tập này</button>
         </div>`;
     }).join('');
 }
@@ -647,6 +647,69 @@ function exportCSV() {
 // ============================================================
 // EVENT LISTENERS
 // ============================================================
+window.genSets = function(btn) {
+    const card = btn.closest('.log-ex-card');
+    const sets = parseInt(card.querySelector('.setup-sets').value)||0;
+    const reps = parseInt(card.querySelector('.setup-reps').value)||0;
+    if(sets<=0 || reps<=0) { showToast('Vui lòng nhập số Set và Rep!','error'); return; }
+    
+    // Clear and build rows
+    const container = card.querySelector('.log-ex-sets-container');
+    let html = '';
+    for(let i=1; i<=sets; i++) {
+        html += `<div class="set-row">
+            <span class="set-row-label">Set ${i}</span>
+            <input type="number" class="set-input set-rep-val" value="${reps}" min="1" placeholder="Rep">
+            <input type="number" class="set-input set-weight-val" placeholder="Tạ" min="0" step="0.5">
+            <button type="button" class="btn-check-set" title="Hoàn thành" onclick="this.closest('.set-row').classList.toggle('completed')">✅</button>
+        </div>`;
+    }
+    container.innerHTML = html;
+    
+    // Ensure visibility
+    container.style.display = 'flex';
+    container.style.maxWidth = '100%';
+    setTimeout(() => container.classList.add('expanded'), 50);
+};
+
+window.saveSets = async function(btn) {
+    const card = btn.closest('.log-ex-card');
+    const exName = card.dataset.exName;
+    const exInfo = findExerciseByName(exName);
+    const setRows = card.querySelectorAll('.set-row');
+    if(setRows.length===0) { showToast('Chưa Bắt đầu tạo Set!','error'); return; }
+    
+    const setsData = [];
+    setRows.forEach((row, idx) => {
+        setsData.push({
+            setNo: idx+1,
+            reps: parseInt(row.querySelector('.set-rep-val').value)||0,
+            weight: parseFloat(row.querySelector('.set-weight-val').value)||0,
+            completed: row.classList.contains('completed')
+        });
+    });
+    
+    const completedSets = setsData.filter(s=>s.completed);
+    if(completedSets.length===0) { showToast('Bạn chưa tick Chọn hoàn thành ít nhất 1 Set!','error'); return; }
+    
+    const entry = {
+        date: todayStr(),
+        workoutType: exInfo?exInfo.workoutType:1,
+        exercise: exName,
+        targetSets: parseInt(card.querySelector('.setup-sets').value)||setsData.length,
+        targetReps: parseInt(card.querySelector('.setup-reps').value)||0,
+        setsData: setsData,
+        notes: ''
+    };
+    
+    btn.classList.add('saved');
+    btn.textContent = 'Đã Lưu!';
+    
+    await addEntry(state.currentMember, entry);
+    showToast(`Đã lưu "${exName}"!`);
+    refreshLog();
+};
+
 function initEvents() {
     document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', () => navigateTo(t.dataset.page)));
     document.getElementById('prev-week').addEventListener('click', () => { state.weekOffset--; renderAttendance(); });
@@ -664,71 +727,6 @@ function initEvents() {
 
     document.getElementById('btn-goto-exercises').addEventListener('click', () => navigateTo('exercises'));
     document.getElementById('btn-add-more-exercises').addEventListener('click', () => navigateTo('exercises'));
-
-    document.getElementById('dynamic-log-list').addEventListener('click', async e => {
-        const card = e.target.closest('.log-ex-card');
-        if(!card) return;
-        
-        if (e.target.closest('.btn-gen-sets')) {
-            const sets = parseInt(card.querySelector('.setup-sets').value)||0;
-            const reps = parseInt(card.querySelector('.setup-reps').value)||0;
-            if(sets<=0 || reps<=0) { showToast('Vui lòng nhập số Set và Rep!','error'); return; }
-            const container = card.querySelector('.log-ex-sets-container');
-            let html = '';
-            for(let i=1; i<=sets; i++) {
-                html += `<div class="set-row">
-                    <span class="set-row-label">Set ${i}</span>
-                    <input type="number" class="set-input set-rep-val" value="${reps}" min="1" placeholder="Rep">
-                    <input type="number" class="set-input set-weight-val" placeholder="Tạ" min="0" step="0.5">
-                    <button class="btn-check-set" title="Hoàn thành">✅</button>
-                </div>`;
-            }
-            container.innerHTML = html;
-            setTimeout(() => container.classList.add('expanded'), 50);
-        }
-        
-        if (e.target.closest('.btn-check-set')) {
-            e.target.closest('.set-row').classList.toggle('completed');
-        }
-        
-        if (e.target.closest('.btn-save-ex')) {
-            const exName = card.dataset.exName;
-            const exInfo = findExerciseByName(exName);
-            const setRows = card.querySelectorAll('.set-row');
-            if(setRows.length===0) { showToast('Chưa Bắt đầu tạo Set!','error'); return; }
-            
-            const setsData = [];
-            setRows.forEach((row, idx) => {
-                setsData.push({
-                    setNo: idx+1,
-                    reps: parseInt(row.querySelector('.set-rep-val').value)||0,
-                    weight: parseFloat(row.querySelector('.set-weight-val').value)||0,
-                    completed: row.classList.contains('completed')
-                });
-            });
-            
-            const completedSets = setsData.filter(s=>s.completed);
-            if(completedSets.length===0) { showToast('Bạn chưa tick Chọn hoàn thành ít nhất 1 Set!','error'); return; }
-            
-            const entry = {
-                date: todayStr(),
-                workoutType: exInfo?exInfo.workoutType:1,
-                exercise: exName,
-                targetSets: parseInt(card.querySelector('.setup-sets').value)||setsData.length,
-                targetReps: parseInt(card.querySelector('.setup-reps').value)||0,
-                setsData: setsData,
-                notes: ''
-            };
-            
-            const btn = e.target.closest('.btn-save-ex');
-            btn.classList.add('saved');
-            btn.textContent = 'Đã Lưu!';
-            
-            await addEntry(state.currentMember, entry);
-            showToast(`Đã lưu "${exName}"!`);
-            refreshLog();
-        }
-    });
 
     document.getElementById('log-tbody').addEventListener('click', async e => {
         const btn=e.target.closest('.btn-del'); if(!btn) return;
