@@ -567,34 +567,51 @@ function renderDynamicLogList() {
     const list = document.getElementById('dynamic-log-list');
     const todayEntries = getTodayEntries();
     
-    // Sort selected exercises: uncompleted first
-    const sorted = [...state.selectedExercises].sort((a,b) => {
-        const aDone = todayEntries.some(e=>e.exercise===a.name);
-        const bDone = todayEntries.some(e=>e.exercise===b.name);
-        if (aDone===bDone) return 0;
-        return aDone ? 1 : -1;
-    });
-
-    list.innerHTML = sorted.map(ex => {
-        const isDone = todayEntries.some(e=>e.exercise===ex.name);
-        if (isDone) {
-            return `<div class="log-ex-card" style="opacity:0.6"><div class="log-ex-header"><h3>✅ ${ex.name}</h3></div><div style="font-size:0.85rem;color:var(--text-3)">Đã hoàn thành hôm nay</div></div>`;
-        }
+    const pending = state.selectedExercises.filter(ex => !todayEntries.some(e => e.exercise === ex.name));
+    const done = state.selectedExercises.filter(ex => todayEntries.some(e => e.exercise === ex.name));
+    
+    if (pending.length === 0 && done.length === 0) { list.innerHTML = ''; return; }
+    
+    let html = '';
+    
+    if (pending.length > 0) {
+        html += `<div class="log-table-wrap">
+            <table class="log-workout-table">
+                <thead><tr>
+                    <th class="col-num">#</th>
+                    <th>Bài tập</th>
+                    <th class="col-input">Set</th>
+                    <th class="col-input">Rep</th>
+                    <th class="col-action"></th>
+                </tr></thead>
+                <tbody id="log-ex-tbody">`;
         
-        return `
-        <div class="log-ex-card" data-ex-id="${ex.id}" data-ex-name="${ex.name}">
-            <div class="log-ex-header">
-                <h3>${ex.name}</h3>
-            </div>
-            <div class="log-ex-setup">
-                <input type="number" class="setup-sets" placeholder="Số Set" min="1" max="20" required>
-                <input type="number" class="setup-reps" placeholder="Số Rep/Set" min="1" max="100" required>
-                <button class="btn-gen-sets" type="button" onclick="window.genSets(this)">Tạo Set</button>
-            </div>
-            <div class="log-ex-sets-container"></div>
-            <button class="btn-save-ex" type="button" onclick="window.saveSets(this)">Lưu bài tập này</button>
+        pending.forEach((ex, idx) => {
+            html += `<tr class="log-ex-row" data-ex-id="${ex.id}" data-ex-name="${ex.name}">
+                <td class="col-num"><span class="ex-idx">${idx + 1}</span></td>
+                <td class="ex-name-cell">
+                    <span class="ex-tbl-name">${ex.name}</span>
+                    <span class="ex-tbl-muscle">${ex.muscles ? ex.muscles[0] : ''}</span>
+                </td>
+                <td><input type="number" class="tbl-input setup-sets" placeholder="4" min="1" max="20"></td>
+                <td><input type="number" class="tbl-input setup-reps" placeholder="12" min="1" max="100"></td>
+                <td><button type="button" class="btn-gen-sets-sm" onclick="window.genSets(this)">▶ Tạo</button></td>
+            </tr>`;
+        });
+        
+        html += `</tbody></table></div>`;
+    }
+    
+    if (done.length > 0) {
+        html += `<div class="log-done-section">${done.map(ex => `
+            <div class="log-done-row">
+                <span>✅ <strong>${ex.name}</strong></span>
+                <span class="done-tag">Đã hoàn thành</span>
+            </div>`).join('')}
         </div>`;
-    }).join('');
+    }
+    
+    list.innerHTML = html;
 }
 
 function getTodayEntries() { return getMemberEntries(state.currentMember).filter(e=>e.date===todayStr()); }
@@ -654,36 +671,49 @@ function exportCSV() {
 // EVENT LISTENERS
 // ============================================================
 window.genSets = function(btn) {
-    const card = btn.closest('.log-ex-card');
-    const sets = parseInt(card.querySelector('.setup-sets').value)||0;
-    const reps = parseInt(card.querySelector('.setup-reps').value)||0;
-    if(sets<=0 || reps<=0) { showToast('Vui lòng nhập số Set và Rep!','error'); return; }
+    const exRow = btn.closest('tr.log-ex-row');
+    const exId = exRow.dataset.exId;
+    const sets = parseInt(exRow.querySelector('.setup-sets').value) || 0;
+    const reps = parseInt(exRow.querySelector('.setup-reps').value) || 0;
+    if (sets <= 0 || reps <= 0) { showToast('Vui lòng nhập số Set và Rep!', 'error'); return; }
     
-    // Clear and build rows
-    const container = card.querySelector('.log-ex-sets-container');
+    document.querySelectorAll(`tr[data-parent-ex="${exId}"]`).forEach(r => r.remove());
+    
     let html = '';
-    for(let i=1; i<=sets; i++) {
-        html += `<div class="set-row">
-            <span class="set-row-label">Set ${i}</span>
-            <input type="number" class="set-input set-rep-val" value="${reps}" min="1" placeholder="Rep">
-            <input type="number" class="set-input set-weight-val" placeholder="Tạ" min="0" step="0.5">
-            <button type="button" class="btn-check-set" title="Hoàn thành" onclick="this.closest('.set-row').classList.toggle('completed')">✅</button>
-        </div>`;
+    for (let i = 1; i <= sets; i++) {
+        html += `<tr class="set-detail-row" data-parent-ex="${exId}">
+            <td class="col-num"><span class="set-num-badge">${i}</span></td>
+            <td class="set-label-td">Set ${i}</td>
+            <td><input type="number" class="tbl-input set-rep-val" value="${reps}" min="1"></td>
+            <td><input type="number" class="tbl-input set-weight-val" placeholder="kg" min="0" step="0.5"></td>
+            <td><button type="button" class="btn-tick-set" onclick="this.closest('tr').classList.toggle('completed'); this.textContent = this.closest('tr').classList.contains('completed') ? '✅' : '○'">○</button></td>
+        </tr>`;
     }
-    container.innerHTML = html;
+    html += `<tr class="set-save-row" data-parent-ex="${exId}">
+        <td colspan="5">
+            <button type="button" class="btn-save-row-ex" data-ex-id="${exId}" onclick="window.saveSets(this)">
+                💾 Lưu bài: <em>${exRow.dataset.exName}</em>
+            </button>
+        </td>
+    </tr>`;
     
-    // Ensure visibility
-    container.style.display = 'flex';
-    container.style.maxWidth = '100%';
-    setTimeout(() => container.classList.add('expanded'), 50);
+    exRow.insertAdjacentHTML('afterend', html);
+    btn.textContent = '↺ Cập nhật';
 };
 
 window.saveSets = async function(btn) {
-    const card = btn.closest('.log-ex-card');
-    const exName = card.dataset.exName;
+    const saveRow = btn.closest('tr');
+    const exId = btn.dataset.exId;
+    const exRow = document.querySelector(`tr.log-ex-row[data-ex-id="${exId}"]`);
+    if (!exRow) { showToast('Không tìm thấy bài tập!', 'error'); return; }
+    
+    const exName = exRow.dataset.exName;
     const exInfo = findExerciseByName(exName);
-    const setRows = card.querySelectorAll('.set-row');
-    if(setRows.length===0) { showToast('Chưa Bắt đầu tạo Set!','error'); return; }
+    const targetSets = parseInt(exRow.querySelector('.setup-sets').value) || 0;
+    const targetReps = parseInt(exRow.querySelector('.setup-reps').value) || 0;
+    const setRows = document.querySelectorAll(`tr.set-detail-row[data-parent-ex="${exId}"]`);
+    
+    if (setRows.length === 0) { showToast('Chưa tạo Set!', 'error'); return; }
     
     const setsData = [];
     setRows.forEach((row, idx) => {
