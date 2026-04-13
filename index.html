@@ -228,68 +228,19 @@
                 </div>
             </div>
 
-            <!-- Exercise Form -->
-            <div class="card log-form-wrapper" id="log-form-wrapper">
-                <div class="card-header">
-                    <h2><span class="emoji">🏋️</span> Bài tập</h2>
-                    <button class="btn-outline" id="btn-add-more-exercises">
-                        + Thêm bài từ trang Bài tập
-                    </button>
+            <!-- Volume Summary Daily -->
+            <div class="card volume-summary-card" id="volume-summary-wrapper" style="display:none;">
+                <div class="volume-today-section">
+                    <div class="volume-today-header" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <span style="color:var(--text-2); font-size:0.9rem;">Tổng Volume hôm nay:</span>
+                        <strong id="volume-today-total" style="color:var(--green); font-size:1.1rem;">0 kg</strong>
+                    </div>
+                    <div class="volume-muscles" id="volume-muscles" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
                 </div>
-                <form id="workout-form">
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label for="input-date">Ngày tập</label>
-                            <input type="date" id="input-date" required>
-                        </div>
-                        <div class="form-field">
-                            <label for="input-exercise">Bài tập</label>
-                            <select id="input-exercise" class="form-select" required>
-                                <option value="">— Chọn bài tập —</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label for="input-sets">Số Set</label>
-                            <input type="number" id="input-sets" min="1" max="20" placeholder="VD: 4" required>
-                        </div>
-                        <div class="form-field">
-                            <label for="input-reps">Reps / Set</label>
-                            <input type="number" id="input-reps" min="1" max="100" placeholder="VD: 12" required>
-                        </div>
-                        <div class="form-field">
-                            <label for="input-weight">Tạ (kg)</label>
-                            <input type="number" id="input-weight" min="0" max="500" step="0.5" placeholder="VD: 40" required>
-                        </div>
-                        <div class="form-field">
-                            <label for="input-notes">Ghi chú</label>
-                            <input type="text" id="input-notes" placeholder="Tuỳ chọn">
-                        </div>
-                    </div>
-
-                    <!-- Volume Summary -->
-                    <div class="volume-summary" id="volume-summary">
-                        <div class="volume-total">
-                            <span>Volume bài này:</span>
-                            <strong id="volume-calc">0</strong> kg
-                        </div>
-                        <div class="volume-divider"></div>
-                        <div class="volume-today-section">
-                            <div class="volume-today-header">
-                                <span>Tổng Volume hôm nay:</span>
-                                <strong id="volume-today-total">0</strong> kg
-                            </div>
-                            <div class="volume-muscles" id="volume-muscles"></div>
-                        </div>
-                    </div>
-
-                    <div class="form-footer">
-                        <button type="submit" class="btn-primary" id="btn-submit-log">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
-                            Lưu bài tập
-                        </button>
-                    </div>
-                </form>
             </div>
+
+            <!-- Dynamic Logging List -->
+            <div class="dynamic-log-list" id="dynamic-log-list" style="display:flex; flex-direction:column; gap:16px; margin-bottom:24px;"></div>
 
             <!-- History -->
             <div class="card">

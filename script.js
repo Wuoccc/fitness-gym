@@ -297,6 +297,11 @@ async function deleteEntry(member, id) {
 // ============================================================
 // UTILITIES
 // ============================================================
+function calcVol(e) { if(e.setsData) return e.setsData.reduce((s,r) => s+(r.completed?r.reps*(r.weight||0):0),0); return (e.sets||0)*(e.reps||0)*(e.weight||0); }
+function calcSets(e) { if(e.setsData) return e.setsData.filter(r=>r.completed).length; return e.sets||0; }
+function calcReps(e) { if(e.setsData) return e.setsData.reduce((s,r) => s+(r.completed?r.reps:0),0); return (e.sets||0)*(e.reps||0); }
+function calcMaxW(e) { if(e.setsData) return Math.max(0, ...e.setsData.filter(r=>r.completed).map(r=>Number(r.weight)||0)); return e.weight||0; }
+
 function fmtDate(d) { return new Date(d).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}); }
 function fmtNum(n) { return new Intl.NumberFormat('vi-VN').format(n); }
 function dateToStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -429,9 +434,9 @@ function renderAttendance() {
 function updateDashboardStats() {
     const entries = getMemberEntries(state.currentMember);
     document.getElementById('d-total-sessions').textContent = new Set(entries.map(e=>e.date)).size;
-    document.getElementById('d-total-volume').textContent = fmtNum(Math.round(entries.reduce((s,e)=>s+e.sets*e.reps*e.weight,0)));
-    document.getElementById('d-total-sets').textContent = fmtNum(entries.reduce((s,e)=>s+e.sets,0));
-    document.getElementById('d-max-weight').textContent = fmtNum(entries.length?Math.max(...entries.map(e=>e.weight)):0);
+    document.getElementById('d-total-volume').textContent = fmtNum(Math.round(entries.reduce((s,e)=>s+calcVol(e),0)));
+    document.getElementById('d-total-sets').textContent = fmtNum(entries.reduce((s,e)=>s+calcSets(e),0));
+    document.getElementById('d-max-weight').textContent = fmtNum(entries.length?Math.max(...entries.map(e=>calcMaxW(e))):0);
     document.getElementById('d-member-badge').textContent = state.currentMember;
 }
 
@@ -440,7 +445,7 @@ function updateDashboardCharts() {
     let entries = getMemberEntries(state.currentMember);
     if (filter!=='all') entries = entries.filter(e=>String(e.workoutType)===filter);
     const map = {};
-    entries.forEach(e => { if(!map[e.date]) map[e.date]={vol:0,maxW:0,sets:0,reps:0}; map[e.date].vol+=e.sets*e.reps*e.weight; map[e.date].maxW=Math.max(map[e.date].maxW,e.weight); map[e.date].sets+=e.sets; map[e.date].reps+=e.sets*e.reps; });
+    entries.forEach(e => { if(!map[e.date]) map[e.date]={vol:0,maxW:0,sets:0,reps:0}; map[e.date].vol+=calcVol(e); map[e.date].maxW=Math.max(map[e.date].maxW,calcMaxW(e)); map[e.date].sets+=calcSets(e); map[e.date].reps+=calcReps(e); });
     const dates=Object.keys(map).sort(), labels=dates.map(fmtDate);
     Object.values(state.charts).forEach(c=>c.destroy()); state.charts={};
     const mk=(id,label,values,color,bg)=>new Chart(document.getElementById(id).getContext('2d'),{type:'line',data:{labels,datasets:[{label,data:values,borderColor:color,backgroundColor:bg,borderWidth:2,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:color,fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(16,16,42,.95)',titleColor:'#f0f0ff',bodyColor:'#f0f0ff',borderColor:'rgba(108,99,255,.3)',borderWidth:1,padding:10,cornerRadius:8,displayColors:false}},scales:{x:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'rgba(240,240,255,.35)',font:{family:'Inter',size:10},maxRotation:45,maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'rgba(240,240,255,.35)',font:{family:'Inter',size:10}},beginAtZero:true}}}});
@@ -455,7 +460,7 @@ function renderDashboardHistory() {
     const tbody=document.getElementById('dashboard-tbody'), empty=document.getElementById('dashboard-empty'), table=document.getElementById('dashboard-table');
     if (!entries.length) { table.style.display='none'; empty.classList.add('show'); return; }
     table.style.display='table'; empty.classList.remove('show');
-    tbody.innerHTML = entries.map(e => { const vol=e.sets*e.reps*e.weight, wt=WORKOUT_TYPES[e.workoutType]; return `<tr><td>${fmtDate(e.date)}</td><td><span class="type-badge t${e.workoutType}">${wt?wt.short:'?'}</span></td><td>${e.exercise}</td><td>${e.sets}</td><td>${e.reps}</td><td>${e.weight}</td><td><strong>${fmtNum(vol)}</strong></td></tr>`; }).join('');
+    tbody.innerHTML = entries.map(e => { const vol=calcVol(e), wt=WORKOUT_TYPES[e.workoutType]; return `<tr><td>${fmtDate(e.date)}</td><td><span class="type-badge t${e.workoutType}">${wt?wt.short:'?'}</span></td><td>${e.exercise}</td><td>${calcSets(e)}</td><td>${calcReps(e)}</td><td>${calcMaxW(e)}</td><td><strong>${fmtNum(vol)}</strong></td></tr>`; }).join('');
 }
 
 // ============================================================
@@ -543,33 +548,44 @@ function refreshLog() {
     document.getElementById('no-exercises-msg').style.display = hasSelection?'none':'flex';
     document.getElementById('completion-section').style.display = hasSelection?'block':'none';
     document.getElementById('muscle-dist-section').style.display = hasSelection?'block':'none';
-    document.getElementById('log-form-wrapper').style.display = hasSelection?'block':'none';
-    document.getElementById('log-member-badge').textContent = state.currentMember;
-    if (hasSelection) { populateExerciseDropdown(); updateProgress(); updateVolumeSummary(); }
+    document.getElementById('volume-summary-wrapper').style.display = hasSelection?'block':'none';
+    if (hasSelection) { renderDynamicLogList(); updateProgress(); updateVolumeSummary(); }
+    else { document.getElementById('dynamic-log-list').innerHTML=''; }
     renderLogHistory();
 }
 
-function populateExerciseDropdown() {
-    const select = document.getElementById('input-exercise');
-    const currentVal = select.value;
-    select.innerHTML = '<option value="">— Chọn bài tập —</option>';
-    const grouped = {};
-    state.selectedExercises.forEach(ex => {
-        const wt = WORKOUT_TYPES[ex.workoutType];
-        if (!grouped[ex.workoutType]) grouped[ex.workoutType]={label:wt?wt.short+': '+wt.name:'Khác',exercises:[]};
-        grouped[ex.workoutType].exercises.push(ex);
+function renderDynamicLogList() {
+    const list = document.getElementById('dynamic-log-list');
+    const todayEntries = getTodayEntries();
+    
+    // Sort selected exercises: uncompleted first
+    const sorted = [...state.selectedExercises].sort((a,b) => {
+        const aDone = todayEntries.some(e=>e.exercise===a.name);
+        const bDone = todayEntries.some(e=>e.exercise===b.name);
+        if (aDone===bDone) return 0;
+        return aDone ? 1 : -1;
     });
-    for (const [,group] of Object.entries(grouped)) {
-        const og = document.createElement('optgroup'); og.label=group.label;
-        group.exercises.forEach(ex => {
-            const opt = document.createElement('option'); opt.value=ex.name;
-            const todayEntries = getTodayEntries();
-            opt.textContent = todayEntries.some(e=>e.exercise===ex.name) ? `✅ ${ex.name} (đã tập)` : ex.name;
-            og.appendChild(opt);
-        });
-        select.appendChild(og);
-    }
-    if (currentVal) select.value = currentVal;
+
+    list.innerHTML = sorted.map(ex => {
+        const isDone = todayEntries.some(e=>e.exercise===ex.name);
+        if (isDone) {
+            return `<div class="log-ex-card" style="opacity:0.6"><div class="log-ex-header"><h3>✅ ${ex.name}</h3></div><div style="font-size:0.85rem;color:var(--text-3)">Đã hoàn thành hôm nay</div></div>`;
+        }
+        
+        return `
+        <div class="log-ex-card" data-ex-id="${ex.id}" data-ex-name="${ex.name}">
+            <div class="log-ex-header">
+                <h3>${ex.name}</h3>
+            </div>
+            <div class="log-ex-setup">
+                <input type="number" class="setup-sets" placeholder="Số Set" min="1" max="20" required>
+                <input type="number" class="setup-reps" placeholder="Số Rep/Set" min="1" max="100" required>
+                <button class="btn-gen-sets">Tạo Set</button>
+            </div>
+            <div class="log-ex-sets-container"></div>
+            <button class="btn-save-ex">Lưu bài tập này</button>
+        </div>`;
+    }).join('');
 }
 
 function getTodayEntries() { return getMemberEntries(state.currentMember).filter(e=>e.date===todayStr()); }
@@ -593,14 +609,12 @@ function updateProgress() {
 
 function updateVolumeSummary() {
     const todayEntries = getTodayEntries();
-    const s=parseInt(document.getElementById('input-sets').value)||0, r=parseInt(document.getElementById('input-reps').value)||0, w=parseFloat(document.getElementById('input-weight').value)||0;
-    document.getElementById('volume-calc').textContent = fmtNum(Math.round(s*r*w));
-    document.getElementById('volume-today-total').textContent = fmtNum(Math.round(todayEntries.reduce((sum,e)=>sum+e.sets*e.reps*e.weight,0)));
+    document.getElementById('volume-today-total').textContent = fmtNum(Math.round(todayEntries.reduce((sum,e)=>sum+calcVol(e),0)));
     const muscleVol={};
     todayEntries.forEach(entry => {
         const exInfo=findExerciseByName(entry.exercise), grp=exInfo?getPrimaryMuscleGroup(exInfo):'chest', f=MUSCLE_FILTERS[grp];
         if(!muscleVol[grp]) muscleVol[grp]={label:f.label,color:f.color,vol:0};
-        muscleVol[grp].vol += entry.sets*entry.reps*entry.weight;
+        muscleVol[grp].vol += calcVol(entry);
     });
     const musclesDiv = document.getElementById('volume-muscles');
     const chips = Object.values(muscleVol).map(m => `<span class="volume-muscle-chip" style="background:${m.color}22;color:${m.color}">${m.label}: ${fmtNum(Math.round(m.vol))} kg</span>`);
@@ -648,27 +662,69 @@ function initEvents() {
     document.getElementById('btn-goto-exercises').addEventListener('click', () => navigateTo('exercises'));
     document.getElementById('btn-add-more-exercises').addEventListener('click', () => navigateTo('exercises'));
 
-    ['input-sets','input-reps','input-weight'].forEach(id => document.getElementById(id).addEventListener('input', () => updateVolumeSummary()));
-
-    document.getElementById('workout-form').addEventListener('submit', async e => {
-        e.preventDefault();
-        const exerciseName = document.getElementById('input-exercise').value;
-        const exInfo = findExerciseByName(exerciseName);
-        const entry = {
-            date: document.getElementById('input-date').value,
-            workoutType: exInfo?exInfo.workoutType:1,
-            exercise: exerciseName,
-            sets: parseInt(document.getElementById('input-sets').value),
-            reps: parseInt(document.getElementById('input-reps').value),
-            weight: parseFloat(document.getElementById('input-weight').value),
-            notes: document.getElementById('input-notes').value.trim()
-        };
-        if (!entry.date||!entry.exercise||!entry.sets||!entry.reps||isNaN(entry.weight)) { showToast('Vui lòng điền đầy đủ!','error'); return; }
-        await addEntry(state.currentMember, entry);
-        ['input-sets','input-reps','input-weight','input-notes'].forEach(id => document.getElementById(id).value='');
-        document.getElementById('input-exercise').value='';
-        showToast(`Đã lưu "${entry.exercise}" cho ${state.currentMember}!`);
-        refreshLog();
+    document.getElementById('dynamic-log-list').addEventListener('click', async e => {
+        const card = e.target.closest('.log-ex-card');
+        if(!card) return;
+        
+        if (e.target.closest('.btn-gen-sets')) {
+            const sets = parseInt(card.querySelector('.setup-sets').value)||0;
+            const reps = parseInt(card.querySelector('.setup-reps').value)||0;
+            if(sets<=0 || reps<=0) { showToast('Vui lòng nhập số Set và Rep!','error'); return; }
+            const container = card.querySelector('.log-ex-sets-container');
+            let html = '';
+            for(let i=1; i<=sets; i++) {
+                html += `<div class="set-row">
+                    <span class="set-row-label">Set ${i}</span>
+                    <input type="number" class="set-input set-rep-val" value="${reps}" min="1" placeholder="Rep">
+                    <input type="number" class="set-input set-weight-val" placeholder="Tạ" min="0" step="0.5">
+                    <button class="btn-check-set" title="Hoàn thành">✅</button>
+                </div>`;
+            }
+            container.innerHTML = html;
+            setTimeout(() => container.classList.add('expanded'), 50);
+        }
+        
+        if (e.target.closest('.btn-check-set')) {
+            e.target.closest('.set-row').classList.toggle('completed');
+        }
+        
+        if (e.target.closest('.btn-save-ex')) {
+            const exName = card.dataset.exName;
+            const exInfo = findExerciseByName(exName);
+            const setRows = card.querySelectorAll('.set-row');
+            if(setRows.length===0) { showToast('Chưa Bắt đầu tạo Set!','error'); return; }
+            
+            const setsData = [];
+            setRows.forEach((row, idx) => {
+                setsData.push({
+                    setNo: idx+1,
+                    reps: parseInt(row.querySelector('.set-rep-val').value)||0,
+                    weight: parseFloat(row.querySelector('.set-weight-val').value)||0,
+                    completed: row.classList.contains('completed')
+                });
+            });
+            
+            const completedSets = setsData.filter(s=>s.completed);
+            if(completedSets.length===0) { showToast('Bạn chưa tick Chọn hoàn thành ít nhất 1 Set!','error'); return; }
+            
+            const entry = {
+                date: todayStr(),
+                workoutType: exInfo?exInfo.workoutType:1,
+                exercise: exName,
+                targetSets: parseInt(card.querySelector('.setup-sets').value)||setsData.length,
+                targetReps: parseInt(card.querySelector('.setup-reps').value)||0,
+                setsData: setsData,
+                notes: ''
+            };
+            
+            const btn = e.target.closest('.btn-save-ex');
+            btn.classList.add('saved');
+            btn.textContent = 'Đã Lưu!';
+            
+            await addEntry(state.currentMember, entry);
+            showToast(`Đã lưu "${exName}"!`);
+            refreshLog();
+        }
     });
 
     document.getElementById('log-tbody').addEventListener('click', async e => {
@@ -679,7 +735,6 @@ function initEvents() {
     document.getElementById('log-history-filter').addEventListener('change', renderLogHistory);
     document.getElementById('chart-filter').addEventListener('change', updateDashboardCharts);
     document.getElementById('btn-export-csv').addEventListener('click', exportCSV);
-    document.getElementById('input-date').value = todayStr();
 }
 
 function syncMemberPills() {
