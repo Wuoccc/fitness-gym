@@ -854,3 +854,4 @@ button { -webkit-appearance: none; }
     padding-top: calc(var(--nav-h) + env(safe-area-inset-top) + 12px) !important;
   }
 }
+\n.sub-muscle-btn { padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; background: rgba(255,255,255,0.05); color: var(--text-2); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s ease; }\n.sub-muscle-btn.active { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3); box-shadow: 0 0 10px rgba(255,255,255,0.1); }\n

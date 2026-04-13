@@ -8781,6 +8781,21 @@ const WORKOUT_TYPES = {
     3: { name:'Chân - Bụng', short:'Bài 3' }
 };
 
+
+const SUB_FILTERS = {
+    chest: [
+        { id: 'all', label: 'Tất cả Ngực', matcher: ex => true },
+        { id: 'upper', label: 'Ngực trên', matcher: ex => /incline|upper/i.test(ex.name) },
+        { id: 'lower', label: 'Ngực dưới', matcher: ex => /decline|dip/i.test(ex.name) },
+        { id: 'middle', label: 'Ngực giữa', matcher: ex => !/incline|upper|decline|dip/i.test(ex.name) }
+    ],
+    shoulder: [
+        { id: 'all', label: 'Tất cả Vai', matcher: ex => true },
+        { id: 'front', label: 'Vai trước', matcher: ex => /front|press|military|arnold|anterior|raise/i.test(ex.name) && !/rear|reverse|lateral|side/i.test(ex.name) },
+        { id: 'side', label: 'Vai giữa', matcher: ex => /lateral|side/i.test(ex.name) },
+        { id: 'rear', label: 'Vai sau', matcher: ex => /rear|reverse|face/i.test(ex.name) }
+    ]
+};
 const MUSCLE_FILTERS = {
     all:      { label:'Tất cả',    keywords:null,                      color:'#6C63FF' },
     chest:    { label:'Ngực',      keywords:['Ngực', 'Chest'],                  color:'#E040FB' },
@@ -8807,7 +8822,7 @@ for (const type of [1,2,3]) EXERCISES[type].forEach(ex => ALL_EXERCISES.push({ .
 let state = {
     currentPage: 'dashboard',
     currentMember: 'Quốc',
-    muscleFilter: 'all',
+    muscleFilter: 'all',\n    subFilter: 'all',
     difficultySort: 'default',
     selectedExercises: [],
     weekOffset: 0,
@@ -9039,6 +9054,11 @@ function exerciseMatchesFilter(ex, group) {
     if (group==='all') return true;
     const f = MUSCLE_FILTERS[group];
     return f && f.keywords && ex.muscles.some(m => f.keywords.some(kw => m.toLowerCase().includes(kw.toLowerCase())));
+    
+    if (match && state.subFilter && state.subFilter !== 'all' && SUB_FILTERS[group]) {
+        const sub = SUB_FILTERS[group].find(s => s.id === state.subFilter);
+        if (sub && !sub.matcher(ex)) match = false;
+    };
 }
 function getPrimaryMuscleGroup(ex) {
     const pm = ex.muscles[0];
@@ -9621,7 +9641,28 @@ function initEvents() {
     document.getElementById('member-pills').addEventListener('click', e => { const p=e.target.closest('.member-pill'); if(!p) return; state.currentMember=p.dataset.member; syncMemberPills(); refreshDashboard(); });
     document.getElementById('log-member-pills').addEventListener('click', e => { const p=e.target.closest('.member-pill'); if(!p) return; state.currentMember=p.dataset.member; syncMemberPills(); refreshLog(); });
 
-    document.getElementById('muscle-filters').addEventListener('click', e => { const btn=e.target.closest('.muscle-btn'); if(!btn) return; state.muscleFilter=btn.dataset.group; document.querySelectorAll('.muscle-btn').forEach(b=>b.classList.toggle('active',b===btn)); renderExercises(); });
+    document.getElementById('muscle-filters').addEventListener('click', e => { const btn=e.target.closest('.muscle-btn'); if(!btn) return; state.muscleFilter=btn.dataset.group; state.subFilter='all'; document.querySelectorAll('.muscle-btn').forEach(b=>b.classList.toggle('active',b===btn)); renderSubFilters(); renderExercises(); });\n
+function renderSubFilters() {
+    const container = document.getElementById('sub-muscle-filters');
+    const subs = SUB_FILTERS[state.muscleFilter] || null;
+    
+    if (!subs) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+    container.style.display = 'flex';
+    container.innerHTML = subs.map(s => `<button class="sub-muscle-btn ${state.subFilter===s.id?'active':''}" data-sub="${s.id}">${s.label}</button>`).join('');
+}
+
+document.getElementById('sub-muscle-filters').addEventListener('click', e => {
+    const btn = e.target.closest('.sub-muscle-btn');
+    if (!btn) return;
+    state.subFilter = btn.dataset.sub;
+    renderSubFilters();
+    renderExercises();
+});
+
 
     document.getElementById('sort-difficulty').addEventListener('change', e => { state.difficultySort = e.target.value; renderExercises(); });
 
