@@ -8827,6 +8827,8 @@ let state = {
     selectedExercises: [],
     weekOffset: 0,
     charts: {},
+    analysisCharts: {},
+    progressionExercise: '',
     cloudData: null,       // cached cloud data
     cloudLogs: [],         // cached cloud logs
     isOnline: false,       // true if Google Sheets is configured
@@ -9459,6 +9461,163 @@ function exportCSV() {
     const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');
     a.href=URL.createObjectURL(blob); a.download=`fitness_${state.currentMember}_${todayStr()}.csv`; a.click();
     showToast(`Đã xuất CSV cho ${state.currentMember}!`);
+}
+
+// ============================================================
+// PAGE 4: ANALYSIS — PR Tracking + Progression + Weak Points
+// ============================================================
+
+function computePRs(member) {
+    const entries = getMemberEntries(member);
+    const prMap = {};
+    [...entries].reverse().forEach(e => {
+        const maxW = calcMaxW(e);
+        const vol = calcVol(e);
+        const reps = calcReps(e);
+        if (!prMap[e.exercise]) {
+            prMap[e.exercise] = { maxWeight: maxW, maxVolume: vol, maxReps: reps, sessions: 1, lastDate: e.date };
+        } else {
+            const pr = prMap[e.exercise];
+            pr.sessions++;
+            pr.lastDate = e.date;
+            if (maxW > pr.maxWeight) pr.maxWeight = maxW;
+            if (vol > pr.maxVolume) pr.maxVolume = vol;
+            if (reps > pr.maxReps) pr.maxReps = reps;
+        }
+    });
+    return prMap;
+}
+
+function renderPRBoard() {
+    const member = state.currentMember;
+    const prMap = computePRs(member);
+    document.getElementById('pr-member-badge').textContent = member;
+    const exercises = Object.keys(prMap);
+    if (!exercises.length) {
+        document.getElementById('pr-stats-row').innerHTML = '';
+        document.getElementById('pr-board').innerHTML = '<div class="empty-state show"><div class="empty-icon">🏆</div><p>Chưa có dữ liệu PR</p><span>Hãy ghi nhận buổi tập đầu tiên!</span></div>';
+        return;
+    }
+    exercises.sort((a, b) => prMap[b].maxWeight - prMap[a].maxWeight);
+    const totalSessions = exercises.reduce((s, n) => s + prMap[n].sessions, 0);
+    const topWeight = prMap[exercises[0]].maxWeight;
+    document.getElementById('pr-stats-row').innerHTML =
+        '<div class="stat-card"><div class="stat-icon-box" style="--sc:#FFD700">🏆</div><div class="stat-detail"><span class="stat-val">' + exercises.length + '</span><span class="stat-lbl">Bài đã tập</span></div></div>' +
+        '<div class="stat-card"><div class="stat-icon-box" style="--sc:#FF9800">📅</div><div class="stat-detail"><span class="stat-val">' + totalSessions + '</span><span class="stat-lbl">Tổng buổi</span></div></div>' +
+        '<div class="stat-card"><div class="stat-icon-box" style="--sc:#FF5252">💪</div><div class="stat-detail"><span class="stat-val">' + topWeight + 'kg</span><span class="stat-lbl">Tạ PR cao nhất</span></div></div>';
+    document.getElementById('pr-board').innerHTML = exercises.map((name, i) => {
+        const pr = prMap[name];
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+        return '<div class="pr-card ' + (i === 0 ? 'gold' : '') + '">' +
+            '<div class="pr-exercise-name">' + medal + ' ' + name + '</div>' +
+            '<div class="pr-stats">' +
+                '<div class="pr-stat"><span class="pr-stat-val">' + pr.maxWeight + '</span><div class="pr-stat-lbl">Max Tạ (kg)</div></div>' +
+                '<div class="pr-stat"><span class="pr-stat-val">' + Math.round(pr.maxVolume) + '</span><div class="pr-stat-lbl">Max Vol (kg)</div></div>' +
+                '<div class="pr-stat"><span class="pr-stat-val">' + pr.sessions + '</span><div class="pr-stat-lbl">Buổi tập</div></div>' +
+            '</div>' +
+            '<div class="pr-date">Gần nhất: ' + fmtDate(pr.lastDate) + '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function renderProgression() {
+    const member = state.currentMember;
+    const entries = getMemberEntries(member);
+    const select = document.getElementById('progression-exercise-select');
+    const exerciseNames = [...new Set(entries.map(e => e.exercise))].sort();
+    const prev = state.progressionExercise || select.value;
+    select.innerHTML = '<option value="">Chọn bài tập...</option>' +
+        exerciseNames.map(n => '<option value="' + n + '"' + (n === prev ? ' selected' : '') + '>' + n + '</option>').join('');
+    const selectedEx = select.value;
+    const empty = document.getElementById('progression-empty');
+    const wrap = document.getElementById('progression-chart-wrap');
+    if (!selectedEx) {
+        empty.classList.add('show');
+        wrap.style.display = 'none';
+        if (state.analysisCharts.progression) { state.analysisCharts.progression.destroy(); state.analysisCharts.progression = null; }
+        return;
+    }
+    empty.classList.remove('show');
+    wrap.style.display = 'block';
+    const exEntries = entries.filter(e => e.exercise === selectedEx).sort((a, b) => a.date.localeCompare(b.date));
+    const labels = exEntries.map(e => fmtDate(e.date));
+    const weights = exEntries.map(e => calcMaxW(e));
+    const volumes = exEntries.map(e => Math.round(calcVol(e)));
+    const allW = weights.filter(w => w > 0);
+    const prW = allW.length ? Math.max(...allW) : 0;
+    const firstW = allW[0] || 0;
+    const improvement = firstW > 0 ? Math.round((prW - firstW) / firstW * 100) : 0;
+    const statsEl = document.getElementById('progression-stats');
+    if (statsEl) statsEl.innerHTML =
+        '<div class="pr-stat"><span class="pr-stat-val" style="color:#FFD700">' + prW + 'kg</span><div class="pr-stat-lbl">PR Tạ Max</div></div>' +
+        '<div class="pr-stat"><span class="pr-stat-val" style="color:#4CAF50">' + (improvement >= 0 ? '+' : '') + improvement + '%</span><div class="pr-stat-lbl">Tiến bộ</div></div>' +
+        '<div class="pr-stat"><span class="pr-stat-val" style="color:#00BCD4">' + exEntries.length + '</span><div class="pr-stat-lbl">Số buổi</div></div>';
+    if (state.analysisCharts.progression) state.analysisCharts.progression.destroy();
+    state.analysisCharts.progression = new Chart(document.getElementById('chart-progression').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Tạ max (kg)', data: weights, borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.1)', borderWidth: 2, pointRadius: 4, fill: true, tension: 0.4, yAxisID: 'y' },
+                { label: 'Volume (kg)', data: volumes, borderColor: '#6C63FF', backgroundColor: 'rgba(108,99,255,0.08)', borderWidth: 2, pointRadius: 4, fill: true, tension: 0.4, yAxisID: 'y1' }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: '#f0f0ff', font: { family: 'Inter', size: 11 } } }, tooltip: { backgroundColor: 'rgba(16,16,42,.95)', titleColor: '#f0f0ff', bodyColor: '#f0f0ff' } }, scales: { x: { grid: { color: 'rgba(255,255,255,.03)' }, ticks: { color: 'rgba(240,240,255,.4)', maxTicksLimit: 8 } }, y: { grid: { color: 'rgba(255,255,255,.03)' }, ticks: { color: '#FFD700' }, position: 'left' }, y1: { grid: { drawOnChartArea: false }, ticks: { color: '#6C63FF' }, position: 'right' } } }
+    });
+}
+
+function renderWeakPoints() {
+    const member = state.currentMember;
+    const entries = getMemberEntries(member);
+    const groupVol = {};
+    entries.forEach(e => {
+        const exInfo = findExerciseByName(e.exercise);
+        if (!exInfo) return;
+        const grp = getPrimaryMuscleGroup(exInfo);
+        const f = MUSCLE_FILTERS[grp];
+        if (!f) return;
+        groupVol[grp] = (groupVol[grp] || 0) + calcVol(e);
+    });
+    const container = document.getElementById('weak-points-container');
+    if (!Object.keys(groupVol).length) {
+        container.innerHTML = '<div class="empty-state show" style="padding:24px 0"><div class="empty-icon">🎯</div><p>Chưa có dữ liệu</p><span>Hãy ghi nhận một vài buổi tập trước!</span></div>';
+        if (state.analysisCharts.radar) { state.analysisCharts.radar.destroy(); state.analysisCharts.radar = null; }
+        return;
+    }
+    const total = Object.values(groupVol).reduce((s, v) => s + v, 0);
+    const sorted = Object.entries(groupVol).sort((a, b) => b[1] - a[1]);
+    const maxVol = sorted[0][1];
+    const radarLabels = sorted.map(x => MUSCLE_FILTERS[x[0]].label);
+    const radarData = sorted.map(x => Math.round(x[1] / maxVol * 100));
+    const radarColors = sorted.map(x => MUSCLE_FILTERS[x[0]].color);
+    if (state.analysisCharts.radar) state.analysisCharts.radar.destroy();
+    state.analysisCharts.radar = new Chart(document.getElementById('chart-muscle-radar').getContext('2d'), {
+        type: 'radar',
+        data: { labels: radarLabels, datasets: [{ label: member, data: radarData, borderColor: '#6C63FF', backgroundColor: 'rgba(108,99,255,0.2)', borderWidth: 2, pointBackgroundColor: radarColors, pointRadius: 5 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(16,16,42,.95)', titleColor: '#f0f0ff', bodyColor: '#f0f0ff' } }, scales: { r: { grid: { color: 'rgba(255,255,255,.08)' }, angleLines: { color: 'rgba(255,255,255,.08)' }, pointLabels: { color: 'rgba(240,240,255,.7)', font: { family: 'Inter', size: 11 } }, ticks: { color: 'rgba(240,240,255,.3)', backdropColor: 'transparent', stepSize: 25 }, min: 0, max: 100 } } }
+    });
+    const weakThreshold = Math.ceil(sorted.length / 3);
+    const weakGroups = sorted.slice(-weakThreshold);
+    let html = '<p class="weak-point-heading">Phân bổ Volume theo nhóm cơ</p>';
+    sorted.forEach(item => {
+        const grp = item[0], vol = item[1];
+        const f = MUSCLE_FILTERS[grp];
+        const pct = Math.round(vol / total * 100);
+        const isWeak = weakGroups.some(w => w[0] === grp);
+        html += '<div class="weak-point-row"><span class="weak-point-label">' + f.label + '</span><div class="weak-point-bar-bg"><div class="weak-point-bar" style="width:' + pct + '%;background:' + f.color + '"></div></div><span class="weak-point-pct">' + pct + '%</span>' + (isWeak ? '<span class="weak-point-warn">⚠️</span>' : '') + '</div>';
+    });
+    if (weakGroups.length) {
+        html += '<div class="analysis-alert"><strong>⚠️ Nhóm cơ cần tăng cường:</strong><ul>' +
+            weakGroups.map(item => '<li><strong>' + MUSCLE_FILTERS[item[0]].label + '</strong> — chỉ chiếm ' + Math.round(item[1] / total * 100) + '% tổng volume</li>').join('') +
+            '</ul></div>';
+    }
+    container.innerHTML = html;
+}
+
+function refreshAnalysis() {
+    renderPRBoard();
+    renderProgression();
+    renderWeakPoints();
 }
 
 // ============================================================
