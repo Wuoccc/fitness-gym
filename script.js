@@ -462,11 +462,28 @@ function updateDashboardCharts() {
 }
 
 function renderDashboardHistory() {
-    const entries = getMemberEntries(state.currentMember).slice(0,20);
-    const tbody=document.getElementById('dashboard-tbody'), empty=document.getElementById('dashboard-empty'), table=document.getElementById('dashboard-table');
+    const entries = getMemberEntries(state.currentMember).slice(0, 20);
+    const tbody = document.getElementById('dashboard-tbody');
+    const empty = document.getElementById('dashboard-empty');
+    const table = document.getElementById('dashboard-table');
     if (!entries.length) { table.style.display='none'; empty.classList.add('show'); return; }
     table.style.display='table'; empty.classList.remove('show');
-    tbody.innerHTML = entries.map(e => { const vol=calcVol(e), wt=WORKOUT_TYPES[e.workoutType]; return `<tr><td>${fmtDate(e.date)}</td><td><span class="type-badge t${e.workoutType}">${wt?wt.short:'?'}</span></td><td>${e.exercise}</td><td>${calcSets(e)}</td><td>${calcReps(e)}</td><td>${calcMaxW(e)}</td><td><strong>${fmtNum(vol)}</strong></td></tr>`; }).join('');
+    tbody.innerHTML = entries.map(e => {
+        const vol = calcVol(e), wt = WORKOUT_TYPES[e.workoutType];
+        const sets = calcSets(e), maxW = calcMaxW(e), reps = calcReps(e);
+        return `<tr class="dash-hist-row" style="cursor:pointer" onclick="window.openEntryModal && window.openEntryModal('${e.id}')">
+            <td>${fmtDate(e.date)}</td>
+            <td><span class="type-badge t${e.workoutType}">${wt ? wt.short : '?'}</span></td>
+            <td><strong>${e.exercise}</strong></td>
+            <td>${sets}</td>
+            <td>${reps}</td>
+            <td>${maxW}</td>
+            <td><strong>${fmtNum(vol)}</strong></td>
+            <td>
+                <button class="btn-del-dash" title="Xóa" onclick="event.stopPropagation(); window.deleteDashEntry('${e.id}', '${e.exercise.replace(/'/g, "'")}')">🗑️</button>
+            </td>
+        </tr>`;
+    }).join('');
 }
 
 // ============================================================
@@ -670,6 +687,14 @@ function exportCSV() {
 // ============================================================
 // EVENT LISTENERS
 // ============================================================
+window.deleteDashEntry = async function(id, name) {
+    if (await confirmDialog('Xác nhận xóa', `Xóa bài "${name}"?`)) {
+        await deleteEntry(state.currentMember, id);
+        showToast('Đã xóa!', 'info');
+        refreshDashboard();
+    }
+};
+
 window.genSets = function(btn) {
     const exRow = btn.closest('tr.log-ex-row');
     const exId = exRow.dataset.exId;
@@ -860,6 +885,17 @@ function initEvents() {
     document.getElementById('log-history-filter').addEventListener('change', renderLogHistory);
     document.getElementById('chart-filter').addEventListener('change', updateDashboardCharts);
     document.getElementById('btn-export-csv').addEventListener('click', exportCSV);
+
+    document.getElementById('btn-delete-latest').addEventListener('click', async () => {
+        const entries = getMemberEntries(state.currentMember);
+        if (!entries.length) { showToast('Không có bài tập nào!', 'error'); return; }
+        const latest = entries[0];
+        if (await confirmDialog('Xóa bài gần nhất', `Xóa "${latest.exercise}" ngày ${fmtDate(latest.date)}?`)) {
+            await deleteEntry(state.currentMember, latest.id);
+            showToast('Đã xóa bài gần nhất!', 'info');
+            refreshDashboard();
+        }
+    });
 }
 
 function syncMemberPills() {

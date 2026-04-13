@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
     <div class="bg-orbs">
@@ -109,14 +109,19 @@
             <div class="card">
                 <div class="card-header">
                     <h2><span class="emoji">📋</span> Lịch sử gần đây <span class="badge" id="d-member-badge">Quốc</span></h2>
-                    <button class="btn-outline" id="btn-export-csv">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"/></svg>
-                        Xuất CSV
-                    </button>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <button class="btn-danger-sm" id="btn-delete-latest" title="Xóa bài tập gần nhất">
+                            🗑️ Xóa gần nhất
+                        </button>
+                        <button class="btn-outline" id="btn-export-csv">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"/></svg>
+                            Xuất CSV
+                        </button>
+                    </div>
                 </div>
                 <div class="table-scroll">
                     <table class="data-table" id="dashboard-table">
-                        <thead><tr><th>Ngày</th><th>Loại bài</th><th>Bài tập</th><th>Sets</th><th>Reps</th><th>Tạ (kg)</th><th>Volume</th></tr></thead>
+                        <thead><tr><th>Ngày</th><th>Loại bài</th><th>Bài tập</th><th>Sets</th><th>Reps</th><th>Tạ (kg)</th><th>Volume</th><th></th></tr></thead>
                         <tbody id="dashboard-tbody"></tbody>
                     </table>
                 </div>
@@ -290,6 +295,6 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?v=9"></script>
+    <script type="module" src="script.js?v=10"></script>
 </body>
 </html>
