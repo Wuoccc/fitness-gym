@@ -9914,4 +9914,11 @@ window.addEventListener('beforeunload', () => {
     // Unsubscribe from snapshot if needed
 });
 
-document.addEventListener('DOMContentLoaded', init);
+// ES Modules are deferred — DOM is always ready by the time this runs.
+// Using readyState check as a safe fallback to ensure init() is always called.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
