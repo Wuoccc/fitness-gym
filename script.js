@@ -166,45 +166,51 @@ function initFirebaseSync() {
         
         snapshot.forEach((doc) => {
             const data = doc.data();
-            data.id = doc.id; // Gắn ID thật từ Firebase
-            
-            // Xử lý Timestamp Firebase sang Local
+            data.id = doc.id;
             let ts = data.timestamp;
             if (ts && typeof ts.toDate === 'function') ts = ts.toDate();
-            // date fallback support for local
             
             if (!newData[data.member]) newData[data.member] = [];
             newData[data.member].push(data);
         });
         
-        // Sort
         for(let m in newData) newData[m].sort((a,b) => new Date(b.date) - new Date(a.date));
 
         state.cloudData = newData;
         saveDataLocal(newData);
         
-        // Sync Logs
-        const qLogs = query(LOGS_COL, orderBy('timestamp', 'desc'));
-        onSnapshot(qLogs, (logSnap) => {
-            const logs = [];
-            logSnap.forEach(d => {
-                const l = d.data();
-                l.timestamp = (l.timestamp && l.timestamp.toDate) ? l.timestamp.toDate().toISOString() : new Date().toISOString();
-                logs.push(l);
-            });
-            state.cloudLogs = logs;
-            saveLogsLocal(logs);
-
-            state.isOnline = true;
-            const t = new Date();
-            showSyncStatus(`⚡ Live (${t.getHours()}:${t.getMinutes().toString().padStart(2,'0')})`);
-            refreshCurrentPage();
-        });
+        state.isOnline = true;
+        updateSyncClock();
+        refreshCurrentPage();
     }, (error) => {
-        console.warn('Lỗi Firestore:', error);
+        console.warn('Lỗi Firestore Workouts:', error);
         showSyncStatus('⚠️ Lỗi Kết Nối');
         state.isOnline = false;
     });
+
+    // Sync Logs
+    const qLogs = query(LOGS_COL, orderBy('timestamp', 'desc'));
+    onSnapshot(qLogs, (logSnap) => {
+        const logs = [];
+        logSnap.forEach(d => {
+            const l = d.data();
+            l.timestamp = (l.timestamp && l.timestamp.toDate) ? l.timestamp.toDate().toISOString() : new Date().toISOString();
+            logs.push(l);
+        });
+        state.cloudLogs = logs;
+        saveLogsLocal(logs);
+
+        state.isOnline = true;
+        updateSyncClock();
+        refreshCurrentPage();
+    }, (error) => {
+        console.warn('Lỗi Firestore Logs:', error);
+    });
+}
+
+function updateSyncClock() {
+    const t = new Date();
+    showSyncStatus(`⚡ Live (${t.getHours()}:${t.getMinutes().toString().padStart(2,'0')})`);
 }
 
 // Refresh whatever page the user is currently viewing
