@@ -8822,7 +8822,8 @@ for (const type of [1,2,3]) EXERCISES[type].forEach(ex => ALL_EXERCISES.push({ .
 let state = {
     currentPage: 'dashboard',
     currentMember: 'Quốc',
-    muscleFilter: 'all',\n    subFilter: 'all',
+    muscleFilter: 'all',
+    subFilter: 'all',
     difficultySort: 'default',
     selectedExercises: [],
     weekOffset: 0,
@@ -9056,12 +9057,12 @@ function getWeekDates(offset=0) {
 function exerciseMatchesFilter(ex, group) {
     if (group==='all') return true;
     const f = MUSCLE_FILTERS[group];
-    return f && f.keywords && ex.muscles.some(m => f.keywords.some(kw => m.toLowerCase().includes(kw.toLowerCase())));
-    
+    let match = f && f.keywords && ex.muscles.some(m => f.keywords.some(kw => m.toLowerCase().includes(kw.toLowerCase())));
     if (match && state.subFilter && state.subFilter !== 'all' && SUB_FILTERS[group]) {
         const sub = SUB_FILTERS[group].find(s => s.id === state.subFilter);
-        if (sub && !sub.matcher(ex)) match = false;
-    };
+        if (sub && sub.matcher && !sub.matcher(ex)) match = false;
+    }
+    return match;
 }
 function getPrimaryMuscleGroup(ex) {
     const pm = ex.muscles[0];
@@ -9808,6 +9809,27 @@ window.openEntryModal = function(entryId) {
     document.getElementById('entry-modal-overlay').style.display = 'flex';
 };
 
+// ============================================================
+// RENDER SUB-FILTERS
+// ============================================================
+function renderSubFilters() {
+    const container = document.getElementById('sub-muscle-filters');
+    const subs = SUB_FILTERS[state.muscleFilter] || null;
+    if (!subs) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+    container.style.display = 'flex';
+    container.innerHTML = subs.map(s =>
+        `<button class="sub-muscle-btn ${state.subFilter===s.id?'active':''}" data-sub="${s.id}">${s.label}</button>`
+    ).join('');
+    // Re-sync active state
+    container.querySelectorAll('.sub-muscle-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.sub === state.subFilter)
+    );
+}
+
 function initEvents() {
     document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', () => navigateTo(t.dataset.page)));
     document.getElementById('prev-week').addEventListener('click', () => { state.weekOffset--; renderAttendance(); });
@@ -9816,28 +9838,8 @@ function initEvents() {
     document.getElementById('member-pills').addEventListener('click', e => { const p=e.target.closest('.member-pill'); if(!p) return; state.currentMember=p.dataset.member; syncMemberPills(); refreshDashboard(); });
     document.getElementById('log-member-pills').addEventListener('click', e => { const p=e.target.closest('.member-pill'); if(!p) return; state.currentMember=p.dataset.member; syncMemberPills(); refreshLog(); });
 
-    document.getElementById('muscle-filters').addEventListener('click', e => { const btn=e.target.closest('.muscle-btn'); if(!btn) return; state.muscleFilter=btn.dataset.group; state.subFilter='all'; document.querySelectorAll('.muscle-btn').forEach(b=>b.classList.toggle('active',b===btn)); renderSubFilters(); renderExercises(); });\n
-function renderSubFilters() {
-    const container = document.getElementById('sub-muscle-filters');
-    const subs = SUB_FILTERS[state.muscleFilter] || null;
-    
-    if (!subs) {
-        container.style.display = 'none';
-        container.innerHTML = '';
-        return;
-    }
-    container.style.display = 'flex';
-    container.innerHTML = subs.map(s => `<button class="sub-muscle-btn ${state.subFilter===s.id?'active':''}" data-sub="${s.id}">${s.label}</button>`).join('');
-}
-
-document.getElementById('sub-muscle-filters').addEventListener('click', e => {
-    const btn = e.target.closest('.sub-muscle-btn');
-    if (!btn) return;
-    state.subFilter = btn.dataset.sub;
-    renderSubFilters();
-    renderExercises();
-});
-
+    document.getElementById('muscle-filters').addEventListener('click', e => { const btn=e.target.closest('.muscle-btn'); if(!btn) return; state.muscleFilter=btn.dataset.group; state.subFilter='all'; document.querySelectorAll('.muscle-btn').forEach(b=>b.classList.toggle('active',b===btn)); renderSubFilters(); renderExercises(); });
+    document.getElementById('sub-muscle-filters').addEventListener('click', e => { const btn=e.target.closest('.sub-muscle-btn'); if(!btn) return; state.subFilter=btn.dataset.sub; renderSubFilters(); renderExercises(); });
 
     document.getElementById('sort-difficulty').addEventListener('change', e => { state.difficultySort = e.target.value; renderExercises(); });
 
