@@ -702,7 +702,6 @@ window.genSets = function(btn) {
 };
 
 window.saveSets = async function(btn) {
-    const saveRow = btn.closest('tr');
     const exId = btn.dataset.exId;
     const exRow = document.querySelector(`tr.log-ex-row[data-ex-id="${exId}"]`);
     if (!exRow) { showToast('Không tìm thấy bài tập!', 'error'); return; }
@@ -718,43 +717,52 @@ window.saveSets = async function(btn) {
     const setsData = [];
     setRows.forEach((row, idx) => {
         setsData.push({
-            setNo: idx+1,
-            reps: parseInt(row.querySelector('.set-rep-val').value)||0,
-            weight: parseFloat(row.querySelector('.set-weight-val').value)||0,
+            setNo: idx + 1,
+            reps: parseInt(row.querySelector('.set-rep-val').value) || 0,
+            weight: parseFloat(row.querySelector('.set-weight-val').value) || 0,
             completed: row.classList.contains('completed')
         });
     });
     
-    const completedSets = setsData.filter(s=>s.completed);
-    if(completedSets.length===0) { showToast('Bạn chưa tick Chọn hoàn thành ít nhất 1 Set!','error'); return; }
+    if (!setsData.some(s => s.completed)) { showToast('Tick ít nhất 1 Set hoàn thành!', 'error'); return; }
     
     const entry = {
         date: todayStr(),
-        workoutType: exInfo?exInfo.workoutType:1,
+        workoutType: exInfo ? exInfo.workoutType : 1,
         exercise: exName,
-        targetSets: parseInt(card.querySelector('.setup-sets').value)||setsData.length,
-        targetReps: parseInt(card.querySelector('.setup-reps').value)||0,
-        setsData: setsData,
-        notes: ''
+        targetSets, targetReps, setsData, notes: ''
     };
     
     btn.disabled = true;
-    btn.classList.add('saved');
-    btn.textContent = 'Đã Lưu!';
+    btn.innerHTML = '✅ Đã lưu!';
     
     await addEntry(state.currentMember, entry);
     showToast(`Đã lưu "${exName}"!`);
     
-    // Animate and remove this card instead of full re-render
-    card.style.transition = 'all 0.4s ease';
-    card.style.transform = 'scale(0.95)';
-    card.style.opacity = '0';
+    // Gather all rows belonging to this exercise and animate them out
+    const rowsToRemove = [exRow, ...Array.from(document.querySelectorAll(`tr[data-parent-ex="${exId}"]`))];
+    rowsToRemove.forEach(r => {
+        r.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        r.style.opacity = '0';
+        r.style.transform = 'translateX(16px)';
+    });
     setTimeout(() => {
-        card.remove();
+        rowsToRemove.forEach(r => r.remove());
         updateProgress();
         updateVolumeSummary();
         renderLogHistory();
-    }, 400);
+        // If no exercises left: show done banner
+        const tbody = document.getElementById('log-ex-tbody');
+        if (tbody && tbody.querySelectorAll('tr.log-ex-row').length === 0) {
+            const wrap = document.getElementById('dynamic-log-list');
+            if (wrap && !wrap.querySelector('.all-done-msg')) {
+                const msg = document.createElement('div');
+                msg.className = 'all-done-msg';
+                msg.innerHTML = '🎉 Xong buổi tập! Chào mừng!';
+                wrap.prepend(msg);
+            }
+        }
+    }, 380);
 };
 
 window.openEntryModal = function(entryId) {
@@ -841,11 +849,12 @@ function initEvents() {
     document.getElementById('btn-confirm-selection').addEventListener('click', confirmSelection);
 
     document.getElementById('btn-goto-exercises').addEventListener('click', () => navigateTo('exercises'));
-    document.getElementById('btn-add-more-exercises').addEventListener('click', () => navigateTo('exercises'));
+    const addMoreBtn = document.getElementById('btn-add-more-exercises');
+    if (addMoreBtn) addMoreBtn.addEventListener('click', () => navigateTo('exercises'));
 
-    document.getElementById('log-tbody').addEventListener('click', async e => {
-        const btn=e.target.closest('.btn-del'); if(!btn) return;
-        if (await confirmDialog('Xác nhận xóa','Bạn có chắc muốn xóa?')) { await deleteEntry(state.currentMember,btn.dataset.id); showToast('Đã xóa!','info'); refreshLog(); }
+    // Delete from history-list via event delegation
+    document.getElementById('history-list').addEventListener('click', async e => {
+        // handled by openEntryModal now
     });
 
     document.getElementById('log-history-filter').addEventListener('change', renderLogHistory);
