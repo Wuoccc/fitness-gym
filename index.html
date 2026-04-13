@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -149,8 +149,13 @@
         <section class="page" id="page-exercises">
             <!-- Muscle Group Filters -->
             <div class="card">
-                <div class="card-header">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <h2><span class="emoji">🔍</span> Tìm kiếm theo nhóm cơ</h2>
+                    <select id="sort-difficulty" class="select-sm">
+                        <option value="default">Sắp xếp: Mặc định</option>
+                        <option value="asc">Sắp xếp: Dễ → Khó</option>
+                        <option value="desc">Sắp xếp: Khó → Dễ</option>
+                    </select>
                 </div>
                 <div class="muscle-filters" id="muscle-filters">
                     <button class="muscle-btn active" data-group="all">Tất cả</button>

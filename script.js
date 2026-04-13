@@ -8791,6 +8791,7 @@ let state = {
     currentPage: 'dashboard',
     currentMember: 'Quốc',
     muscleFilter: 'all',
+    difficultySort: 'default',
     selectedExercises: [],
     weekOffset: 0,
     charts: {},
@@ -9167,7 +9168,16 @@ function renderDashboardHistory() {
 // ============================================================
 function renderExercises() {
     const group = state.muscleFilter;
-    const filtered = ALL_EXERCISES.filter(ex => exerciseMatchesFilter(ex, group));
+    let filtered = ALL_EXERCISES.filter(ex => exerciseMatchesFilter(ex, group));
+    
+    // Sort logic
+    const diffWeight = { 'Dễ': 1, 'Trung bình': 2, 'Khó': 3 };
+    if (state.difficultySort === 'asc') {
+        filtered.sort((a,b) => (diffWeight[a.diff] || 0) - (diffWeight[b.diff] || 0));
+    } else if (state.difficultySort === 'desc') {
+        filtered.sort((a,b) => (diffWeight[b.diff] || 0) - (diffWeight[a.diff] || 0));
+    }
+
     const grid = document.getElementById('exercise-grid');
 
     grid.innerHTML = filtered.map(ex => {
@@ -9595,6 +9605,8 @@ function initEvents() {
     document.getElementById('log-member-pills').addEventListener('click', e => { const p=e.target.closest('.member-pill'); if(!p) return; state.currentMember=p.dataset.member; syncMemberPills(); refreshLog(); });
 
     document.getElementById('muscle-filters').addEventListener('click', e => { const btn=e.target.closest('.muscle-btn'); if(!btn) return; state.muscleFilter=btn.dataset.group; document.querySelectorAll('.muscle-btn').forEach(b=>b.classList.toggle('active',b===btn)); renderExercises(); });
+
+    document.getElementById('sort-difficulty').addEventListener('change', e => { state.difficultySort = e.target.value; renderExercises(); });
 
     document.getElementById('exercise-grid').addEventListener('click', e => { if(e.target.closest('.btn-video')) return; const card=e.target.closest('.exercise-card'); if(card) toggleExerciseSelection(card.dataset.exId); });
 
