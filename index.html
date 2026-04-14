@@ -322,13 +322,25 @@
                 </div>
             </div>
 
-            <!-- Weak Point Analysis -->
+            <!-- AI Analysis -->
             <div class="card">
                 <div class="card-header">
-                    <h2><span class="emoji">🎯</span> Phân tích điểm yếu</h2>
+                    <h2><span class="emoji">🧠</span> Phân tích AI (DeepSeek)</h2>
                 </div>
-                <div class="chart-wrap" style="height:300px;"><canvas id="chart-muscle-radar"></canvas></div>
-                <div id="weak-points-container" class="weak-points"></div>
+                <div class="ai-analysis-container" style="display:flex; flex-direction:column; gap:16px;">
+                    <div id="ai-api-key-container" style="display:none; flex-direction:column; gap:8px;">
+                        <label style="font-size:0.85rem; color:var(--text-2);">DeepSeek API Key (Chỉ lưu trên máy bạn):</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="password" id="ai-api-key" placeholder="sk-..." class="tbl-input" style="flex:1;">
+                            <button class="btn-primary" id="btn-save-ai-key">Lưu</button>
+                        </div>
+                    </div>
+                    <p style="font-size:0.9rem; color:var(--text-2); line-height:1.5;">Dựa vào dữ liệu tập luyện của bạn, AI sẽ đánh giá điểm mạnh, điểm yếu và đề xuất hướng cải thiện cho các buổi tập tiếp theo.</p>
+                    <button class="btn-primary" id="btn-run-ai-analysis" style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <span>✨ Phân tích ngay</span>
+                    </button>
+                    <div id="ai-analysis-result" style="display:none; background:rgba(255,255,255,0.05); padding:16px; border-radius:12px; font-size:0.9rem; color:#fff; line-height:1.6; border:1px solid rgba(255,255,255,0.1); white-space:pre-wrap;"></div>
+                </div>
             </div>
 
         </section>

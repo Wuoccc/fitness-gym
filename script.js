@@ -7628,58 +7628,107 @@ function renderProgression() {
     });
 }
 
-function renderWeakPoints() {
+/* AI Analysis Logic */
+async function runAIAnalysis() {
+    const btn = document.getElementById('btn-run-ai-analysis');
+    const resultDiv = document.getElementById('ai-analysis-result');
+    const keyInput = document.getElementById('ai-api-key');
+    const keyContainer = document.getElementById('ai-api-key-container');
+    let apiKey = localStorage.getItem('fitness_deepseek_key');
+    
+    if (!apiKey) {
+        keyContainer.style.display = 'flex';
+        apiKey = keyInput.value.trim();
+        if (!apiKey) {
+            showToast('Bạn cần nhập DeepSeek API Key trước!', 'error');
+            return;
+        }
+        localStorage.setItem('fitness_deepseek_key', apiKey);
+        keyContainer.style.display = 'none';
+    } else {
+        keyInput.value = apiKey;
+    }
+
     const member = state.currentMember;
     const entries = getMemberEntries(member);
-    const groupVol = {};
-    entries.forEach(e => {
-        const exInfo = findExerciseByName(e.exercise);
-        if (!exInfo) return;
-        const grp = getPrimaryMuscleGroup(exInfo);
-        const f = MUSCLE_FILTERS[grp];
-        if (!f) return;
-        groupVol[grp] = (groupVol[grp] || 0) + calcVol(e);
-    });
-    const container = document.getElementById('weak-points-container');
-    if (!Object.keys(groupVol).length) {
-        container.innerHTML = '<div class="empty-state show" style="padding:24px 0"><div class="empty-icon">🎯</div><p>Chưa có dữ liệu</p><span>Hãy ghi nhận một vài buổi tập trước!</span></div>';
-        if (state.analysisCharts.radar) { state.analysisCharts.radar.destroy(); state.analysisCharts.radar = null; }
+    if (!entries.length) {
+        showToast('Chưa có dữ liệu tập luyện để phân tích.', 'error');
         return;
     }
-    const total = Object.values(groupVol).reduce((s, v) => s + v, 0);
-    const sorted = Object.entries(groupVol).sort((a, b) => b[1] - a[1]);
-    const maxVol = sorted[0][1];
-    const radarLabels = sorted.map(x => MUSCLE_FILTERS[x[0]].label);
-    const radarData = sorted.map(x => Math.round(x[1] / maxVol * 100));
-    const radarColors = sorted.map(x => MUSCLE_FILTERS[x[0]].color);
-    if (state.analysisCharts.radar) state.analysisCharts.radar.destroy();
-    state.analysisCharts.radar = new Chart(document.getElementById('chart-muscle-radar').getContext('2d'), {
-        type: 'radar',
-        data: { labels: radarLabels, datasets: [{ label: member, data: radarData, borderColor: '#6C63FF', backgroundColor: 'rgba(108,99,255,0.2)', borderWidth: 2, pointBackgroundColor: radarColors, pointRadius: 5 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(16,16,42,.95)', titleColor: '#f0f0ff', bodyColor: '#f0f0ff' } }, scales: { r: { grid: { color: 'rgba(255,255,255,.08)' }, angleLines: { color: 'rgba(255,255,255,.08)' }, pointLabels: { color: 'rgba(240,240,255,.7)', font: { family: 'Inter', size: 11 } }, ticks: { color: 'rgba(240,240,255,.3)', backdropColor: 'transparent', stepSize: 25 }, min: 0, max: 100 } } }
+
+    // Summary logic
+    const recent = entries.slice(0, 30);
+    const groupVol = {};
+    const exMax = {};
+    recent.forEach(e => {
+        const exInfo = findExerciseByName(e.exercise);
+        const grp = exInfo ? getPrimaryMuscleGroup(exInfo) : 'other';
+        const label = MUSCLE_FILTERS[grp] ? MUSCLE_FILTERS[grp].label : 'Khác';
+        groupVol[label] = (groupVol[label] || 0) + calcVol(e);
+        
+        e.setsData.forEach(s => {
+            if(s.completed && s.w) {
+                exMax[e.exercise] = Math.max(exMax[e.exercise] || 0, s.w);
+            }
+        });
     });
-    const weakThreshold = Math.ceil(sorted.length / 3);
-    const weakGroups = sorted.slice(-weakThreshold);
-    let html = '<p class="weak-point-heading">Phân bổ Volume theo nhóm cơ</p>';
-    sorted.forEach(item => {
-        const grp = item[0], vol = item[1];
-        const f = MUSCLE_FILTERS[grp];
-        const pct = Math.round(vol / total * 100);
-        const isWeak = weakGroups.some(w => w[0] === grp);
-        html += '<div class="weak-point-row"><span class="weak-point-label">' + f.label + '</span><div class="weak-point-bar-bg"><div class="weak-point-bar" style="width:' + pct + '%;background:' + f.color + '"></div></div><span class="weak-point-pct">' + pct + '%</span>' + (isWeak ? '<span class="weak-point-warn">⚠️</span>' : '') + '</div>';
-    });
-    if (weakGroups.length) {
-        html += '<div class="analysis-alert"><strong>⚠️ Nhóm cơ cần tăng cường:</strong><ul>' +
-            weakGroups.map(item => '<li><strong>' + MUSCLE_FILTERS[item[0]].label + '</strong> — chỉ chiếm ' + Math.round(item[1] / total * 100) + '% tổng volume</li>').join('') +
-            '</ul></div>';
+
+    let promptText = `Bạn là HLV Gym chuyên nghiệp. Phân tích dữ liệu 30 bài tập gần đây của hội viên tên ${member} (trả lời tối đa 200 chữ bằng tiếng Việt).\n\n`;
+    promptText += `- Phân bổ Volume: ${Object.entries(groupVol).map(([k,v])=>\`${k}: ${v}kg\`).join(', ')}\n`;
+    promptText += `- Tạ nặng nhất: ${Object.entries(exMax).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>\`${k} (${v}kg)\`).join(', ')}\n\n`;
+    promptText += `Yêu cầu:\n1. Khen ngợi điểm mạnh (nhóm cơ tập nhiều/tạ tốt).\n2. Chỉ ra điểm yếu (nhóm cơ bị bỏ quên/tập ít).\n3. Đề xuất một định hướng ngắn gọn.`;
+
+    btn.disabled = true;
+    btn.innerHTML = `⏳ Đang kết nối DeepSeek...`;
+    
+    try {
+        const response = await fetch('https://api.deepseek.com/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [{ role: 'user', content: promptText }]
+            })
+        });
+        
+        if (response.status === 401) {
+            localStorage.removeItem('fitness_deepseek_key');
+            keyContainer.style.display = 'flex';
+            throw new Error('API Key không hợp lệ hoặc đã bị chặn.');
+        }
+        if (!response.ok) throw new Error(`Lỗi HTTP ${response.status}`);
+        
+        const data = await response.json();
+        const content = data.choices[0].message.content;
+        
+        resultDiv.style.display = 'block';
+        
+        // Simple Markdown parser for basic formatting
+        let html = content
+            .replace(/### (.*)/g, '<h3>$1</h3>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n- (.*)/g, '\n<li>$1</li>')
+            .replace(/\n\n/g, '<br><br>');
+            
+        resultDiv.innerHTML = html;
+        showToast('Phân tích hoàn tất!', 'success');
+        
+    } catch (e) {
+        showToast('Lỗi AI: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>✨ Phân tích lại</span>`;
     }
-    container.innerHTML = html;
 }
 
 function refreshAnalysis() {
     renderPRBoard();
     renderProgression();
-    renderWeakPoints();
+    // renderWeakPoints removed
 }
 
 // ============================================================
@@ -7916,6 +7965,12 @@ function initEvents() {
     document.getElementById('progression-exercise-select').addEventListener('change', e => {
         state.progressionExercise = e.target.value;
         renderProgression();
+    });
+    
+    document.getElementById('btn-run-ai-analysis').addEventListener('click', runAIAnalysis);
+    document.getElementById('btn-save-ai-key').addEventListener('click', () => {
+        const k = document.getElementById('ai-api-key').value.trim();
+        if(k) { localStorage.setItem('fitness_deepseek_key', k); showToast('Đã lưu API Key', 'success'); document.getElementById('ai-api-key-container').style.display = 'none'; }
     });
 
     document.getElementById('exercise-grid').addEventListener('click', e => { if(e.target.closest('.btn-video')) return; const card=e.target.closest('.exercise-card'); if(card) toggleExerciseSelection(card.dataset.exId); });
