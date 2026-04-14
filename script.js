@@ -7630,11 +7630,58 @@ function renderProgression() {
     });
 }
 
+function renderWeakPoints() {
+    const member = state.currentMember;
+    const entries = getMemberEntries(member);
+    const groupVol = {};
+    entries.forEach(e => {
+        const exInfo = findExerciseByName(e.exercise);
+        if (!exInfo) return;
+        const grp = getPrimaryMuscleGroup(exInfo);
+        const f = MUSCLE_FILTERS[grp];
+        if (!f) return;
+        groupVol[grp] = (groupVol[grp] || 0) + calcVol(e);
+    });
+    const container = document.getElementById('weak-points-container');
+    if (!Object.keys(groupVol).length) {
+        container.innerHTML = '<div class="empty-state show" style="padding:24px 0"><div class="empty-icon">🎯</div><p>Chưa có dữ liệu</p><span>Hãy ghi nhận một vài buổi tập trước!</span></div>';
+        if (state.analysisCharts.radar) { state.analysisCharts.radar.destroy(); state.analysisCharts.radar = null; }
+        return;
+    }
+    const total = Object.values(groupVol).reduce((s, v) => s + v, 0);
+    const sorted = Object.entries(groupVol).sort((a, b) => b[1] - a[1]);
+    const maxVol = sorted[0][1];
+    const radarLabels = sorted.map(x => MUSCLE_FILTERS[x[0]].label);
+    const radarData = sorted.map(x => Math.round(x[1] / maxVol * 100));
+    const radarColors = sorted.map(x => MUSCLE_FILTERS[x[0]].color);
+    if (state.analysisCharts.radar) state.analysisCharts.radar.destroy();
+    state.analysisCharts.radar = new Chart(document.getElementById('chart-muscle-radar').getContext('2d'), {
+        type: 'radar',
+        data: { labels: radarLabels, datasets: [{ label: member, data: radarData, borderColor: '#6C63FF', backgroundColor: 'rgba(108,99,255,0.2)', borderWidth: 2, pointBackgroundColor: radarColors, pointRadius: 5 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(16,16,42,.95)', titleColor: '#f0f0ff', bodyColor: '#f0f0ff' } }, scales: { r: { grid: { color: 'rgba(255,255,255,.08)' }, angleLines: { color: 'rgba(255,255,255,.08)' }, pointLabels: { color: 'rgba(240,240,255,.7)', font: { family: 'Inter', size: 11 } }, ticks: { color: 'rgba(240,240,255,.3)', backdropColor: 'transparent', stepSize: 25 }, min: 0, max: 100 } } }
+    });
+    const weakThreshold = Math.ceil(sorted.length / 3);
+    const weakGroups = sorted.slice(-weakThreshold);
+    let html = '<p class="weak-point-heading">Phân bổ Volume theo nhóm cơ</p>';
+    sorted.forEach(item => {
+        const grp = item[0], vol = item[1];
+        const f = MUSCLE_FILTERS[grp];
+        const pct = Math.round(vol / total * 100);
+        const isWeak = weakGroups.some(w => w[0] === grp);
+        html += '<div class="weak-point-row"><span class="weak-point-label">' + f.label + '</span><div class="weak-point-bar-bg"><div class="weak-point-bar" style="width:' + pct + '%;background:' + f.color + '"></div></div><span class="weak-point-pct">' + pct + '%</span>' + (isWeak ? '<span class="weak-point-warn">⚠️</span>' : '') + '</div>';
+    });
+    if (weakGroups.length) {
+        html += '<div class="analysis-alert"><strong>⚠️ Nhóm cơ cần tăng cường:</strong><ul>' +
+            weakGroups.map(item => '<li><strong>' + MUSCLE_FILTERS[item[0]].label + '</strong> — chỉ chiếm ' + Math.round(item[1] / total * 100) + '% tổng volume</li>').join('') +
+            '</ul></div>';
+    }
+    container.innerHTML = html;
+}
 
 function refreshAnalysis() {
     renderPRBoard();
     renderProgression();
-
+    renderWeakPoints();
 }
 
 // ============================================================
