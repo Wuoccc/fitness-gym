@@ -1287,8 +1287,8 @@ async function runGeminiAnalysis() {
     });
 
     let promptText = `Bạn là HLV (Gym Coach) chuyên nghiệp. Hãy phân tích ngắn gọn, súc tích (tối đa 250 từ) bằng tiếng Việt dựa trên dữ liệu 40 bài tập gần đây của hội viên tên ${member}.\n\n`;
-    promptText += `- Phân bổ Volume: ${Object.entries(groupVol).map(([k,v])=>\`${k}: ${v}kg\`).join(', ')}\n`;
-    promptText += `- Thành tích Tạ nặng nhất (Max/PR): ${Object.entries(exMax).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>\`${k} (${v}kg)\`).join(', ')}\n\n`;
+    promptText += `- Phân bổ Volume: ${Object.entries(groupVol).map(([k,v])=>`${k}: ${Math.round(v)}kg`).join(', ')}\n`;
+    promptText += `- Thành tích Tạ nặng nhất (Max/PR): ${Object.entries(exMax).map(([k,v])=>`${k}: ${v}kg`).join(', ')}\n\n`;
     promptText += `Yêu cầu:\n1. Đánh giá nhanh điểm mạnh (dựa trên mức tạ và volume).\n2. Phân tích điểm yếu/mất cân bằng cơ bắp nếu có.\n3. Gợi ý 1-2 bài tập thiết thực nên bổ sung vào lịch tập tiếp theo để cải thiện điểm yếu.`;
 
     btn.disabled = true;
