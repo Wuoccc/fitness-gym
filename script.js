@@ -1256,85 +1256,6 @@ function renderWeakPoints() {
     container.innerHTML = html;
 }
 
-/* Gemini AI Analysis Logic */
-async function runGeminiAnalysis() {
-    const btn = document.getElementById('btn-run-gemini-analysis');
-    const resultDiv = document.getElementById('gemini-analysis-result');
-    const apiKey = 'AIzaSyDYA0rjpVhvTLnCF1U52Y6sMo9mWiMfTXM';
-
-    const member = state.currentMember;
-    const entries = getMemberEntries(member);
-    if (!entries.length) {
-        showToast('Chưa có dữ liệu tập luyện để phân tích.', 'error');
-        return;
-    }
-
-    // Summary logic
-    const recent = entries.slice(0, 40);
-    const groupVol = {};
-    const exMax = {};
-    recent.forEach(e => {
-        const exInfo = findExerciseByName(e.exercise);
-        const grp = exInfo ? getPrimaryMuscleGroup(exInfo) : 'other';
-        const label = MUSCLE_FILTERS[grp] ? MUSCLE_FILTERS[grp].label : 'Khác';
-        groupVol[label] = (groupVol[label] || 0) + calcVol(e);
-        
-        e.setsData.forEach(s => {
-            if(s.completed && s.w) {
-                exMax[e.exercise] = Math.max(exMax[e.exercise] || 0, s.w);
-            }
-        });
-    });
-
-    let promptText = `Bạn là HLV (Gym Coach) chuyên nghiệp. Hãy phân tích ngắn gọn, súc tích (tối đa 250 từ) bằng tiếng Việt dựa trên dữ liệu 40 bài tập gần đây của hội viên tên ${member}.\n\n`;
-    promptText += `- Phân bổ Volume: ${Object.entries(groupVol).map(([k,v])=>`${k}: ${Math.round(v)}kg`).join(', ')}\n`;
-    promptText += `- Thành tích Tạ nặng nhất (Max/PR): ${Object.entries(exMax).map(([k,v])=>`${k}: ${v}kg`).join(', ')}\n\n`;
-    promptText += `Yêu cầu:\n1. Đánh giá nhanh điểm mạnh (dựa trên mức tạ và volume).\n2. Phân tích điểm yếu/mất cân bằng cơ bắp nếu có.\n3. Gợi ý 1-2 bài tập thiết thực nên bổ sung vào lịch tập tiếp theo để cải thiện điểm yếu.`;
-
-    btn.disabled = true;
-    btn.innerHTML = `⏳ Đang kết nối Gemini AI...`;
-    
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: promptText }] }]
-            })
-        });
-        
-        if (response.status === 400 || response.status === 403) {
-            throw new Error('API Key bị chặn hoặc đã giới hạn.');
-        }
-        if (!response.ok) throw new Error(`Lỗi HTTP ${response.status}`);
-        
-        const data = await response.json();
-        const content = data.candidates[0].content.parts[0].text;
-        
-        resultDiv.style.display = 'block';
-        
-        // Simple Markdown parser for basic formatting
-        let html = content
-            .replace(/### (.*)/g, '<h3>$1</h3>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/\n\* (.*)/g, '\n<li>$1</li>')
-            .replace(/\n- (.*)/g, '\n<li>$1</li>')
-            .replace(/\n\n/g, '<br><br>');
-            
-        resultDiv.innerHTML = html;
-        showToast('Phân tích hoàn tất!', 'success');
-        
-    } catch (e) {
-        showToast('Lỗi AI: ' + e.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<span>✨ Phân tích lại bằng Gemini</span>`;
-    }
-}
-
 function refreshAnalysis() {
     renderPRBoard();
     renderProgression();
@@ -1435,7 +1356,6 @@ window.saveSets = async function(btn) {
 
     showToast(`Đã lưu "${exName}"!`);
     
-    // Gather all rows belonging to this exercise and animate them out
     const rowsToRemove = [exRow, ...Array.from(document.querySelectorAll(`tr[data-parent-ex="${exId}"]`))];
     rowsToRemove.forEach(r => {
         r.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
@@ -1447,7 +1367,6 @@ window.saveSets = async function(btn) {
         updateProgress();
         updateVolumeSummary();
         renderLogHistory();
-        // If no exercises left: show done banner
         const tbody = document.getElementById('log-ex-tbody');
         if (tbody && tbody.querySelectorAll('tr.log-ex-row').length === 0) {
             const wrap = document.getElementById('dynamic-log-list');
@@ -1469,7 +1388,6 @@ window.openEntryModal = function(entryId) {
     document.getElementById('modal-ex-name').textContent = entry.exercise;
     document.getElementById('modal-ex-date').textContent = fmtDate(entry.date);
     
-    // Summary stats
     const totalSets = calcSets(entry);
     const totalVol = calcVol(entry);
     const maxW = calcMaxW(entry);
@@ -1483,7 +1401,6 @@ window.openEntryModal = function(entryId) {
         <div class="modal-stat"><span>⚡ Volume</span><strong>${fmtNum(Math.round(totalVol))} kg</strong></div>
     `;
     
-    // Per-set detail
     if (entry.setsData && entry.setsData.length > 0) {
         document.getElementById('modal-sets').innerHTML = `
             <h4 style="color:var(--text-2); margin-bottom:12px; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.05em;">Chi tiết từng Set</h4>
@@ -1497,7 +1414,6 @@ window.openEntryModal = function(entryId) {
             `).join('')}
         `;
     } else {
-        // Old format: single entry
         document.getElementById('modal-sets').innerHTML = `
             <div class="modal-set-row done">
                 <span class="modal-set-label">Tổng cộng</span>
@@ -1508,7 +1424,6 @@ window.openEntryModal = function(entryId) {
         `;
     }
     
-    // Delete button inside modal
     const existing = document.getElementById('modal-delete-btn');
     if (existing) existing.remove();
     const delBtn = document.createElement('button');
@@ -1544,7 +1459,6 @@ function renderSubFilters() {
     container.innerHTML = subs.map(s =>
         `<button class="sub-muscle-btn ${state.subFilter===s.id?'active':''}" data-sub="${s.id}">${s.label}</button>`
     ).join('');
-    // Re-sync active state
     container.querySelectorAll('.sub-muscle-btn').forEach(b =>
         b.classList.toggle('active', b.dataset.sub === state.subFilter)
     );
@@ -1577,9 +1491,6 @@ function initEvents() {
         renderProgression();
     });
 
-    document.getElementById('btn-run-gemini-analysis').addEventListener('click', runGeminiAnalysis);
-
-
     document.getElementById('exercise-grid').addEventListener('click', e => { if(e.target.closest('.btn-video')) return; const card=e.target.closest('.exercise-card'); if(card) toggleExerciseSelection(card.dataset.exId); });
 
     document.getElementById('btn-clear-selection').addEventListener('click', () => { state.selectedExercises=[]; renderExercises(); showToast('Đã xóa tất cả','info'); });
@@ -1589,7 +1500,6 @@ function initEvents() {
     const addMoreBtn = document.getElementById('btn-add-more-exercises');
     if (addMoreBtn) addMoreBtn.addEventListener('click', () => navigateTo('exercises'));
 
-    // History list events handled by openEntryModal inline
     const histList = document.getElementById('history-list');
     if (histList) histList.addEventListener('click', () => {});
 
@@ -1622,14 +1532,12 @@ async function init() {
     document.getElementById('nav-date').textContent = new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
     initEvents();
 
-    // Thay thế nút Sync bằng Firebase
     const syncBtn = document.getElementById('btn-sync');
     if (syncBtn) {
         syncBtn.title = "Firebase Sync Active";
         syncBtn.onclick = () => showToast('Dữ liệu đang được đồng bộ LIVE với Firebase!', 'info');
     }
 
-    // Kết nối Firebase
     if (isFirebaseConfigured()) {
         showToast('Đang kết nối Cloud Base...','info');
         initFirebaseSync();
@@ -1641,13 +1549,10 @@ async function init() {
     navigateTo('dashboard');
 }
 
-// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
     // Unsubscribe from snapshot if needed
 });
 
-// ES Modules are deferred — DOM is always ready by the time this runs.
-// Using readyState check as a safe fallback to ensure init() is always called.
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
