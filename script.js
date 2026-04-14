@@ -7678,6 +7678,102 @@ function renderWeakPoints() {
     container.innerHTML = html;
 }
 
+/* Gemini AI Analysis Logic */
+async function runGeminiAnalysis() {
+    const btn = document.getElementById('btn-run-gemini-analysis');
+    const resultDiv = document.getElementById('gemini-analysis-result');
+    const keyInput = document.getElementById('gemini-api-key');
+    const keyContainer = document.getElementById('gemini-api-key-container');
+    let apiKey = localStorage.getItem('fitness_gemini_key');
+    
+    if (!apiKey) {
+        keyContainer.style.display = 'flex';
+        apiKey = keyInput.value.trim();
+        if (!apiKey) {
+            showToast('Bạn cần nhập Gemini API Key trước!', 'error');
+            return;
+        }
+        localStorage.setItem('fitness_gemini_key', apiKey);
+        keyContainer.style.display = 'none';
+    } else {
+        keyInput.value = apiKey;
+    }
+
+    const member = state.currentMember;
+    const entries = getMemberEntries(member);
+    if (!entries.length) {
+        showToast('Chưa có dữ liệu tập luyện để phân tích.', 'error');
+        return;
+    }
+
+    // Summary logic
+    const recent = entries.slice(0, 40);
+    const groupVol = {};
+    const exMax = {};
+    recent.forEach(e => {
+        const exInfo = findExerciseByName(e.exercise);
+        const grp = exInfo ? getPrimaryMuscleGroup(exInfo) : 'other';
+        const label = MUSCLE_FILTERS[grp] ? MUSCLE_FILTERS[grp].label : 'Khác';
+        groupVol[label] = (groupVol[label] || 0) + calcVol(e);
+        
+        e.setsData.forEach(s => {
+            if(s.completed && s.w) {
+                exMax[e.exercise] = Math.max(exMax[e.exercise] || 0, s.w);
+            }
+        });
+    });
+
+    let promptText = `Bạn là HLV (Gym Coach) chuyên nghiệp. Hãy phân tích ngắn gọn, súc tích (tối đa 250 từ) bằng tiếng Việt dựa trên dữ liệu 40 bài tập gần đây của hội viên tên ${member}.\n\n`;
+    promptText += `- Phân bổ Volume: ${Object.entries(groupVol).map(([k,v])=>\`${k}: ${v}kg\`).join(', ')}\n`;
+    promptText += `- Thành tích Tạ nặng nhất (Max/PR): ${Object.entries(exMax).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>\`${k} (${v}kg)\`).join(', ')}\n\n`;
+    promptText += `Yêu cầu:\n1. Đánh giá nhanh điểm mạnh (dựa trên mức tạ và volume).\n2. Phân tích điểm yếu/mất cân bằng cơ bắp nếu có.\n3. Gợi ý 1-2 bài tập thiết thực nên bổ sung vào lịch tập tiếp theo để cải thiện điểm yếu.`;
+
+    btn.disabled = true;
+    btn.innerHTML = `⏳ Đang kết nối Gemini AI...`;
+    
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: promptText }] }]
+            })
+        });
+        
+        if (response.status === 400 || response.status === 403) {
+            localStorage.removeItem('fitness_gemini_key');
+            keyContainer.style.display = 'flex';
+            throw new Error('API Key không hợp lệ hoặc đã bị vô hiệu hóa.');
+        }
+        if (!response.ok) throw new Error(`Lỗi HTTP ${response.status}`);
+        
+        const data = await response.json();
+        const content = data.candidates[0].content.parts[0].text;
+        
+        resultDiv.style.display = 'block';
+        
+        // Simple Markdown parser for basic formatting
+        let html = content
+            .replace(/### (.*)/g, '<h3>$1</h3>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n\* (.*)/g, '\n<li>$1</li>')
+            .replace(/\n- (.*)/g, '\n<li>$1</li>')
+            .replace(/\n\n/g, '<br><br>');
+            
+        resultDiv.innerHTML = html;
+        showToast('Phân tích hoàn tất!', 'success');
+        
+    } catch (e) {
+        showToast('Lỗi AI: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>✨ Phân tích lại bằng Gemini</span>`;
+    }
+}
+
 function refreshAnalysis() {
     renderPRBoard();
     renderProgression();
@@ -7918,6 +8014,12 @@ function initEvents() {
     document.getElementById('progression-exercise-select').addEventListener('change', e => {
         state.progressionExercise = e.target.value;
         renderProgression();
+    });
+
+    document.getElementById('btn-run-gemini-analysis').addEventListener('click', runGeminiAnalysis);
+    document.getElementById('btn-save-gemini-key').addEventListener('click', () => {
+        const k = document.getElementById('gemini-api-key').value.trim();
+        if(k) { localStorage.setItem('fitness_gemini_key', k); showToast('Đã lưu API Key', 'success'); document.getElementById('gemini-api-key-container').style.display = 'none'; }
     });
 
     document.getElementById('exercise-grid').addEventListener('click', e => { if(e.target.closest('.btn-video')) return; const card=e.target.closest('.exercise-card'); if(card) toggleExerciseSelection(card.dataset.exId); });
