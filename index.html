@@ -218,11 +218,16 @@
                         <button class="member-pill" data-member="Madsen"><span class="pill-dot" style="--dot:#FF5252"></span>Madsen</button>
                     </div>
                 </div>
+                <!-- Log date picker -->
+                <div class="log-date-select" style="margin-top: 16px; display: flex; align-items: center; gap: 12px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px;">
+                    <label style="font-size: .85rem; color: var(--text-2); font-weight: 600;">Ngày ghi nhận:</label>
+                    <input type="date" id="log-date-picker" class="tbl-input" style="width: auto; padding: 6px 12px; min-width: 140px; cursor: pointer;">
+                </div>
             </div>
 
             <!-- Workout Progress & Muscle Distribution -->
             <div class="card" id="progress-card">
-                <div class="card-header"><h2><span class="emoji">📊</span> Tiến độ buổi tập hôm nay</h2></div>
+                <div class="card-header"><h2><span class="emoji">📊</span> Tiến độ buổi tập</h2></div>
 
                 <!-- Overall completion -->
                 <div class="completion-section" id="completion-section">
@@ -256,7 +261,7 @@
             <div class="card volume-summary-card" id="volume-summary-wrapper" style="display:none;">
                 <div class="volume-today-section">
                     <div class="volume-today-header" style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                        <span style="color:var(--text-2); font-size:0.9rem;">Tổng Volume hôm nay:</span>
+                        <span style="color:var(--text-2); font-size:0.9rem;">Tổng Volume trong ngày:</span>
                         <strong id="volume-today-total" style="color:var(--green); font-size:1.1rem;">0 kg</strong>
                     </div>
                     <div class="volume-muscles" id="volume-muscles" style="display:flex; flex-wrap:wrap; gap:8px;"></div>

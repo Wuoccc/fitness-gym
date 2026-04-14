@@ -7416,7 +7416,11 @@ function renderDynamicLogList() {
     list.innerHTML = html;
 }
 
-function getTodayEntries() { return getMemberEntries(state.currentMember).filter(e=>e.date===todayStr()); }
+function getSelectedDate() {
+    const dp = document.getElementById('log-date-picker');
+    return dp && dp.value ? dp.value : todayStr();
+}
+function getTodayEntries() { return getMemberEntries(state.currentMember).filter(e=>e.date===getSelectedDate()); }
 
 function updateProgress() {
     const todayEntries = getTodayEntries(); const total = state.selectedExercises.length;
@@ -7446,7 +7450,7 @@ function updateVolumeSummary() {
     });
     const musclesDiv = document.getElementById('volume-muscles');
     const chips = Object.values(muscleVol).map(m => `<span class="volume-muscle-chip" style="background:${m.color}22;color:${m.color}">${m.label}: ${fmtNum(Math.round(m.vol))} kg</span>`);
-    musclesDiv.innerHTML = chips.length ? chips.join('') : '<span style="color:var(--text-3);font-size:.78rem">Chưa có dữ liệu hôm nay</span>';
+    musclesDiv.innerHTML = chips.length ? chips.join('') : '<span style="color:var(--text-3);font-size:.78rem">Chưa có dữ liệu trong ngày</span>';
 }
 
 function renderLogHistory() {
@@ -7746,7 +7750,7 @@ window.saveSets = async function(btn) {
     if (!setsData.some(s => s.completed)) { showToast('Tick ít nhất 1 Set hoàn thành!', 'error'); return; }
     
     const entry = {
-        date: todayStr(),
+        date: getSelectedDate(),
         workoutType: exInfo ? exInfo.workoutType : 1,
         exercise: exName,
         targetSets, targetReps, setsData, notes: ''
@@ -7888,6 +7892,11 @@ function renderSubFilters() {
 }
 
 function initEvents() {
+    const datePicker = document.getElementById('log-date-picker');
+    if (datePicker) {
+        datePicker.value = todayStr();
+        datePicker.addEventListener('change', refreshLog);
+    }
     document.getElementById('exercise-search').addEventListener('input', e => {
         state.searchQuery = e.target.value;
         renderExercises();
