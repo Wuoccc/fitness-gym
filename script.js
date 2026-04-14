@@ -234,7 +234,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Ngồi trên ghế, cúi người về phía trước, cầm tạ đơn bên dưới. Nâng hai tay sang hai bên cho đến khi song song với sàn, co cơ vai sau rồi hạ xuống.",
       "gradient": "linear-gradient(135deg, #2af598 0%, #009efd 100%)",
-      "imgFolder": "Dumbbell_Rear_Lateral_Raise"
+      "imgFolder": "Seated_Bent-Over_Rear_Delt_Raise"
     },
     {
       "id": "Arnold_Press",
@@ -273,7 +273,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Ngồi hoặc đứng, cầm một tạ đơn bằng cả hai tay đưa lên trên đầu. Hạ tạ xuống sau đầu bằng cách gập khuỷu tay, sau đó đẩy lên trở lại.",
       "gradient": "linear-gradient(135deg, #f5576c 0%, #a18cd1 100%)",
-      "imgFolder": "Overhead_Triceps_Extension"
+      "imgFolder": "Standing_Dumbbell_Triceps_Extension"
     },
     {
       "id": "Skull_Crushers",
@@ -434,7 +434,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Đặt một đầu gối và tay lên ghế để làm điểm tựa. Cầm tạ đơn bằng tay kia, kéo tạ lên phía hông, co cơ lưng rồi hạ xuống từ từ.",
       "gradient": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-      "imgFolder": "Dumbbell_One-Arm_Row"
+      "imgFolder": "One-Arm_Dumbbell_Row"
     },
     {
       "id": "T_Bar_Row",
@@ -803,7 +803,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Nằm ngửa trên sàn, hai tay dọc theo thân hoặc đặt dưới mông. Nâng hai chân thẳng lên đến vuông góc với sàn, rồi hạ xuống chậm không chạm sàn.",
       "gradient": "linear-gradient(135deg, #96fbc4 0%, #f9f586 100%)",
-      "imgFolder": "Leg_Raises"
+      "imgFolder": "Flat_Bench_Lying_Leg_Raise"
     }
   ]
 };const WORKOUT_TYPES = {
