@@ -29,7 +29,7 @@ const LOGS_COL = collection(db, 'logs');
 
 // Image base URL from free-exercise-db
 
-const IMG_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises';
+const IMG_BASE = 'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises';
 
 // ============================================================
 // EXERCISE DATABASE — with real images
