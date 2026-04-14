@@ -7682,22 +7682,7 @@ function renderWeakPoints() {
 async function runGeminiAnalysis() {
     const btn = document.getElementById('btn-run-gemini-analysis');
     const resultDiv = document.getElementById('gemini-analysis-result');
-    const keyInput = document.getElementById('gemini-api-key');
-    const keyContainer = document.getElementById('gemini-api-key-container');
-    let apiKey = localStorage.getItem('fitness_gemini_key');
-    
-    if (!apiKey) {
-        keyContainer.style.display = 'flex';
-        apiKey = keyInput.value.trim();
-        if (!apiKey) {
-            showToast('Bạn cần nhập Gemini API Key trước!', 'error');
-            return;
-        }
-        localStorage.setItem('fitness_gemini_key', apiKey);
-        keyContainer.style.display = 'none';
-    } else {
-        keyInput.value = apiKey;
-    }
+    const apiKey = 'AIzaSyDYA0rjpVhvTLnCF1U52Y6sMo9mWiMfTXM';
 
     const member = state.currentMember;
     const entries = getMemberEntries(member);
@@ -7743,9 +7728,7 @@ async function runGeminiAnalysis() {
         });
         
         if (response.status === 400 || response.status === 403) {
-            localStorage.removeItem('fitness_gemini_key');
-            keyContainer.style.display = 'flex';
-            throw new Error('API Key không hợp lệ hoặc đã bị vô hiệu hóa.');
+            throw new Error('API Key bị chặn hoặc đã giới hạn.');
         }
         if (!response.ok) throw new Error(`Lỗi HTTP ${response.status}`);
         
@@ -8017,10 +8000,7 @@ function initEvents() {
     });
 
     document.getElementById('btn-run-gemini-analysis').addEventListener('click', runGeminiAnalysis);
-    document.getElementById('btn-save-gemini-key').addEventListener('click', () => {
-        const k = document.getElementById('gemini-api-key').value.trim();
-        if(k) { localStorage.setItem('fitness_gemini_key', k); showToast('Đã lưu API Key', 'success'); document.getElementById('gemini-api-key-container').style.display = 'none'; }
-    });
+
 
     document.getElementById('exercise-grid').addEventListener('click', e => { if(e.target.closest('.btn-video')) return; const card=e.target.closest('.exercise-card'); if(card) toggleExerciseSelection(card.dataset.exId); });
 
