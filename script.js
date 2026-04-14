@@ -169,7 +169,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Bắt đầu ở tư thế chống đẩy với hai tay rộng hơn vai, cơ thể thẳng từ đầu đến gót chân. Hạ người xuống cho đến khi ngực gần chạm sàn, sau đó đẩy lên.",
       "gradient": "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
-      "imgFolder": ""
+      "imgFolder": "Pushups"
     },
     {
       "id": "Dips_Chest",
@@ -182,7 +182,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Đứng giữa hai thanh xà song song. Nghiêng người về phía trước ~30 độ rồi hạ thấp cơ thể bằng cách gập khuỷu tay, tập trung vào ngực dưới.",
       "gradient": "linear-gradient(135deg, #e8d5b7 0%, #f5a623 100%)",
-      "imgFolder": ""
+      "imgFolder": "Dips_-_Chest_Version"
     },
     {
       "id": "Dumbbell_Incline_Press",
@@ -195,7 +195,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Nằm ngửa trên ghế dốc nghiêng 30-45 độ, cầm một tạ ở mỗi tay. Đẩy tạ lên thẳng và hạ xuống chậm rãi, tập trung vào phần ngực trên.",
       "gradient": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-      "imgFolder": ""
+      "imgFolder": "Incline_Dumbbell_Press"
     },
     {
       "id": "Front_Raise",
@@ -208,7 +208,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Đứng thẳng, cầm hai tạ đơn ở trước đùi. Nâng cả hai tay lên phía trước đến ngang vai, giữ cánh tay thẳng, rồi hạ xuống từ từ.",
       "gradient": "linear-gradient(135deg, #fda085 0%, #f6d365 100%)",
-      "imgFolder": ""
+      "imgFolder": "Front_Dumbbell_Raise"
     },
     {
       "id": "Barbell_Military_Press",
@@ -221,7 +221,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Đứng hoặc ngồi, cầm thanh tạ ở độ rộng vai và đặt ở phía trước ngực. Đẩy thanh tạ thẳng lên trên đầu cho đến khi tay duỗi thẳng, rồi hạ xuống.",
       "gradient": "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)",
-      "imgFolder": ""
+      "imgFolder": "Seated_Barbell_Military_Press"
     },
     {
       "id": "Rear_Delt_Fly",
@@ -234,7 +234,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Ngồi trên ghế, cúi người về phía trước, cầm tạ đơn bên dưới. Nâng hai tay sang hai bên cho đến khi song song với sàn, co cơ vai sau rồi hạ xuống.",
       "gradient": "linear-gradient(135deg, #2af598 0%, #009efd 100%)",
-      "imgFolder": ""
+      "imgFolder": "Dumbbell_Rear_Lateral_Raise"
     },
     {
       "id": "Arnold_Press",
@@ -247,7 +247,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Ngồi trên ghế, cầm tạ ở trước mặt với lòng bàn tay hướng vào trong. Đẩy tạ lên đồng thời xoay cổ tay để lòng bàn tay hướng ra ngoài khi đạt đỉnh.",
       "gradient": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-      "imgFolder": ""
+      "imgFolder": "Arnold_Dumbbell_Press"
     },
     {
       "id": "Tricep_Pushdown_Cable",
@@ -260,7 +260,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Đứng trước máy cáp, cầm thanh chữ V hoặc thẳng ở vị trí cao. Giữ khuỷu tay sát thân mình và đẩy thanh xuống phía dưới cho đến khi cánh tay duỗi thẳng.",
       "gradient": "linear-gradient(135deg, #ff5252 0%, #ff867c 100%)",
-      "imgFolder": ""
+      "imgFolder": "Triceps_Pushdown"
     },
     {
       "id": "Overhead_Tricep_Extension",
@@ -273,7 +273,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Ngồi hoặc đứng, cầm một tạ đơn bằng cả hai tay đưa lên trên đầu. Hạ tạ xuống sau đầu bằng cách gập khuỷu tay, sau đó đẩy lên trở lại.",
       "gradient": "linear-gradient(135deg, #f5576c 0%, #a18cd1 100%)",
-      "imgFolder": ""
+      "imgFolder": "Overhead_Triceps_Extension"
     },
     {
       "id": "Skull_Crushers",
@@ -286,7 +286,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Nằm ngửa trên ghế, cầm thanh EZ thẳng lên trên ngực. Gập khuỷu tay để hạ thanh xuống phía trán, giữ khuỷu cố định, rồi đẩy lên trở lại.",
       "gradient": "linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)",
-      "imgFolder": ""
+      "imgFolder": "EZ-Bar_Skullcrusher"
     },
     {
       "id": "Tricep_Dips_Parallel",
@@ -299,7 +299,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Đứng giữa hai thanh xà song song, nắm chặt thanh và đẩy thân lên. Giữ thân thẳng đứng, hạ người xuống bằng cách gập khuỷu tay, sau đó đẩy lên.",
       "gradient": "linear-gradient(135deg, #f7971e 0%, #ffd200 100%)",
-      "imgFolder": ""
+      "imgFolder": "Dips_-_Triceps_Version"
     }
   ],
   "2": [
@@ -434,7 +434,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Đặt một đầu gối và tay lên ghế để làm điểm tựa. Cầm tạ đơn bằng tay kia, kéo tạ lên phía hông, co cơ lưng rồi hạ xuống từ từ.",
       "gradient": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-      "imgFolder": ""
+      "imgFolder": "Dumbbell_One-Arm_Row"
     },
     {
       "id": "T_Bar_Row",
@@ -447,7 +447,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Đặt một đầu thanh tạ vào góc tường, cầm đầu còn lại và cúi người ~45 độ. Kéo thanh lên phía ngực, co cơ lưng giữa, rồi hạ xuống chậm rãi.",
       "gradient": "linear-gradient(135deg, #f5af19 0%, #f12711 100%)",
-      "imgFolder": ""
+      "imgFolder": "T-Bar_Row_with_Handle"
     },
     {
       "id": "Hyperextension",
@@ -460,7 +460,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Nằm sấp trên máy hyperextension, đặt hông lên tấm đệm và chân được cố định. Hạ thân trên xuống rồi nâng lên đến thẳng hàng với chân.",
       "gradient": "linear-gradient(135deg, #00b09b 0%, #96c93d 100%)",
-      "imgFolder": ""
+      "imgFolder": "Hyperextensions_Back_Extensions"
     },
     {
       "id": "Chin_Ups",
@@ -473,7 +473,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Nắm lấy thanh xà với lòng bàn tay hướng vào người (supinated). Kéo người lên cho đến khi cằm qua thanh. Bài tập kết hợp tốt giữa lưng và tay trước.",
       "gradient": "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
-      "imgFolder": ""
+      "imgFolder": "Chin-Up"
     },
     {
       "id": "Hammer_Curl",
@@ -486,7 +486,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Đứng thẳng, cầm hai tạ đơn với lòng bàn tay hướng vào nhau (trung tính). Curl lên giữ tư thế tay như cầm búa, không xoay cổ tay.",
       "gradient": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-      "imgFolder": ""
+      "imgFolder": "Alternate_Hammer_Curl"
     },
     {
       "id": "Concentration_Curl",
@@ -499,7 +499,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Ngồi trên ghế, tựa cùi chỏ vào bên trong đùi. Cầm tạ đơn, curl chậm lên đến vai, co cơ ở đỉnh rồi hạ xuống từ từ.",
       "gradient": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-      "imgFolder": ""
+      "imgFolder": "Concentration_Curls"
     },
     {
       "id": "Preacher_Curl",
@@ -512,7 +512,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Ngồi trên máy preacher curl, đặt cánh tay lên mặt nghiêng. Cầm tạ EZ và curl lên co cơ bắp, sau đó duỗi thẳng xuống hoàn toàn.",
       "gradient": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-      "imgFolder": ""
+      "imgFolder": "Preacher_Curl"
     },
     {
       "id": "Wrist_Curl",
@@ -525,7 +525,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Ngồi trên ghế, tựa cẳng tay lên đùi với lòng bàn tay hướng lên. Cầm thanh tạ nhẹ, cuộn cổ tay lên và hạ xuống hoàn toàn.",
       "gradient": "linear-gradient(135deg, #96fbc4 0%, #f9f586 100%)",
-      "imgFolder": ""
+      "imgFolder": "Palms-Up_Barbell_Wrist_Curl_Over_A_Bench"
     },
     {
       "id": "Reverse_Curl",
@@ -538,7 +538,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Đứng thẳng, cầm thanh tạ với lòng bàn tay hướng xuống (sấp). Curl lên co cơ cẳng tay và phần trên cơ tay trước, rồi hạ xuống từ từ.",
       "gradient": "linear-gradient(135deg, #0acffe 0%, #495aff 100%)",
-      "imgFolder": ""
+      "imgFolder": "Reverse_Barbell_Curl"
     },
     {
       "id": "Farmers_Walk",
@@ -551,7 +551,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Cầm tạ nặng ở hai tay, đứng thẳng lưng và đi bộ một khoảng cách nhất định. Bài tập tuyệt vời tăng sức bóp tay và sức bền cẳng tay.",
       "gradient": "linear-gradient(135deg, #2af598 0%, #009efd 100%)",
-      "imgFolder": ""
+      "imgFolder": "Farmers_Walk"
     }
   ],
   "3": [
@@ -686,7 +686,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Đứng thẳng cầm tạ đơn hai tay. Bước một chân về phía trước dài, hạ gối sau gần chạm sàn, giữ thân thẳng rồi đẩy về vị trí ban đầu.",
       "gradient": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-      "imgFolder": ""
+      "imgFolder": "Dumbbell_Lunges"
     },
     {
       "id": "Bulgarian_Split_Squat",
@@ -699,7 +699,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Đặt chân sau lên ghế, chân trước bước ra trước. Hạ người xuống bằng cách gập gối của chân trước, giữ thân thẳng rồi đẩy lên.",
       "gradient": "linear-gradient(135deg, #2af598 0%, #009efd 100%)",
-      "imgFolder": ""
+      "imgFolder": "Barbell_Side_Split_Squat"
     },
     {
       "id": "Lying_Leg_Curl",
@@ -712,7 +712,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Nằm sấp trên máy, đặt cẳng chân dưới đệm máy. Co chân lại hướng về mông, giữ hông ép xuống mặt máy, rồi từ từ hạ xuống.",
       "gradient": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-      "imgFolder": ""
+      "imgFolder": "Lying_Leg_Curls"
     },
     {
       "id": "Romanian_Deadlift",
@@ -725,7 +725,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Đứng thẳng cầm tạ đòn trước đùi. Giữ lưng thẳng, đẩy hông ra sau, hạ tạ xuống cẳng chân cho đến khi cảm thấy căng cơ đùi sau.",
       "gradient": "linear-gradient(135deg, #f7971e 0%, #ffd200 100%)",
-      "imgFolder": ""
+      "imgFolder": "Romanian_Deadlift"
     },
     {
       "id": "Glute_Bridge",
@@ -738,7 +738,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Nằm ngửa, đầu gối gập, bàn chân áp sàn. Đẩy hông lên cao nhất có thể, co cơ mông ở đỉnh, giữ 1-2 giây rồi hạ xuống.",
       "gradient": "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)",
-      "imgFolder": ""
+      "imgFolder": "Barbell_Glute_Bridge"
     },
     {
       "id": "Seated_Calf_Raises",
@@ -751,7 +751,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Ngồi trên máy calf raise ngồi, đặt đầu gối mép trên tấm đệm. Nâng gót chân lên đến tối đa và hạ xuống từ từ, tập vào cơ soleus.",
       "gradient": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-      "imgFolder": ""
+      "imgFolder": "Seated_Calf_Raise"
     },
     {
       "id": "Hanging_Leg_Raises",
@@ -764,7 +764,7 @@ const EXERCISES = {
       "diff": "Trung bình",
       "desc": "Treo người lên xà đơn bằng cả hai tay. Nâng hai chân lên đến ngang bụng hoặc cao hơn, co cơ core, rồi hạ xuống từ từ.",
       "gradient": "linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)",
-      "imgFolder": ""
+      "imgFolder": "Hanging_Leg_Raise"
     },
     {
       "id": "Cable_Crunch",
@@ -777,7 +777,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Quỳ trước máy cáp cao, cầm dây hoặc rope. Gập người xuống bằng cơ bụng, đưa khuỷu tay về phía đầu gối rồi trở về.",
       "gradient": "linear-gradient(135deg, #f7971e 0%, #ffd200 100%)",
-      "imgFolder": ""
+      "imgFolder": "Cable_Crunch"
     },
     {
       "id": "Russian_Twist",
@@ -790,7 +790,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Ngồi trên sàn, chân hơi nhấc, người nghiêng ~45 độ. Cầm tạ hoặc không, xoay thân sang trái và phải luân phiên để tập cơ bụng chéo.",
       "gradient": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-      "imgFolder": ""
+      "imgFolder": "Russian_Twist"
     },
     {
       "id": "Leg_Raises_Floor",
@@ -803,7 +803,7 @@ const EXERCISES = {
       "diff": "Dễ",
       "desc": "Nằm ngửa trên sàn, hai tay dọc theo thân hoặc đặt dưới mông. Nâng hai chân thẳng lên đến vuông góc với sàn, rồi hạ xuống chậm không chạm sàn.",
       "gradient": "linear-gradient(135deg, #96fbc4 0%, #f9f586 100%)",
-      "imgFolder": ""
+      "imgFolder": "Leg_Raises"
     }
   ]
 };const WORKOUT_TYPES = {
