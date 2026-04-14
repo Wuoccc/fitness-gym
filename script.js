@@ -7286,13 +7286,12 @@ function renderExercises() {
         const diffColor = ex.diff==='Dễ'?'var(--green)':ex.diff==='Khó'?'var(--red)':'var(--orange)';
         const imgs = getExerciseImages(ex);
 
-        // Build visual: use real images with crossfade animation if available, else gradient+emoji
+        // Build visual: use static real image if available, else gradient+emoji
         let visualHTML;
         if (imgs.img0) {
             visualHTML = `
             <div class="ex-visual ex-visual-img">
-                <img class="ex-img ex-img-a" src="${imgs.img0}" alt="${ex.name} pose 1" loading="lazy" onerror="this.style.display='none'">
-                <img class="ex-img ex-img-b" src="${imgs.img1}" alt="${ex.name} pose 2" loading="lazy" onerror="this.style.display='none'">
+                <img class="ex-img" src="${imgs.img0}" alt="${ex.name}" loading="lazy" onerror="this.style.display='none'">
                 <div class="ex-img-fallback" style="--ex-grad:${ex.gradient}">
                     <div class="ex-anim-icon">${ex.icon}</div>
                 </div>

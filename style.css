@@ -198,19 +198,12 @@ body {
 .ex-motion-arrows { display:flex; gap:8px; font-size:1.1rem; animation:arrowPulse 1.5s ease-in-out infinite; opacity:.5; }
 @keyframes arrowPulse { 0%,100%{opacity:.3;transform:translateY(0)} 50%{opacity:.7;transform:translateY(-3px)} }
 
-/* Exercise image visual (crossfade between 2 poses like GIF) */
+/* Exercise image visual (static image) */
 .ex-visual-img { position:relative; height:200px; background:#0a0a20; }
 .ex-img {
     position:absolute; inset:0; width:100%; height:100%;
     object-fit:contain; object-position:center;
     background:#0a0a20;
-}
-.ex-img-a { animation:imgCrossfade 2.5s ease-in-out infinite; z-index:2; }
-.ex-img-b { z-index:1; }
-@keyframes imgCrossfade {
-    0%,40% { opacity:1; }
-    50%,90% { opacity:0; }
-    100% { opacity:1; }
 }
 .ex-img-fallback {
     position:absolute; inset:0; z-index:0;
